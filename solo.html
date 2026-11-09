@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1,user-scalable=no, viewport-fit=cover"
+  >
+  <meta name="theme-color" content="#000000">
+  <title>CRDG Rummy</title>
+  <link rel="stylesheet" href="solo.css?v=clocktickvolume20261018">
+  <link rel="stylesheet" href="history.css">
+
+  <style id="rummy-six-group-layout">
+    /* G1-G6 must have identical card layout. */
+    #my-hand .group-box {
+      display: inline-flex;
+      flex-wrap: nowrap;
+      align-items: flex-start;
+      gap: 4px;
+      overflow: visible;
+    }
+    #my-hand .group-box .card + .card {
+      margin-left: -37px;
+    }
+  </style>
+<style id="join-screen-design-only">
+/* =========================================================
+   JOIN SCREEN DESIGN ONLY
+   No game/lobby styling or functionality is changed.
+   ========================================================= */
+
+#joinScreen.join-screen {
+  background:
+    radial-gradient(circle at 50% 18%, rgba(34, 197, 94, .16), transparent 30%),
+    radial-gradient(circle at 20% 85%, rgba(59, 130, 246, .13), transparent 28%),
+    linear-gradient(135deg, #06140f 0%, #081d18 48%, #03100c 100%);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+#joinScreen.join-screen::before,
+#joinScreen.join-screen::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: .22;
+  filter: blur(1px);
+}
+
+#joinScreen.join-screen::before {
+  width: 260px;
+  height: 260px;
+  top: -100px;
+  left: -90px;
+  border: 1px solid rgba(255,255,255,.15);
+  box-shadow:
+    0 0 0 24px rgba(255,255,255,.025),
+    0 0 0 48px rgba(255,255,255,.018);
+}
+
+#joinScreen.join-screen::after {
+  width: 220px;
+  height: 220px;
+  right: -80px;
+  bottom: -90px;
+  border: 1px solid rgba(255,215,0,.18);
+}
+
+#joinScreen .auth-card {
+  position: relative;
+  z-index: 2;
+  width: min(390px, calc(100vw - 32px));
+  padding: 20px 22px 18px;
+  gap: 9px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 18px;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.105), rgba(255,255,255,.035));
+  box-shadow:
+    0 24px 70px rgba(0,0,0,.55),
+    inset 0 1px 0 rgba(255,255,255,.10);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+#joinScreen .auth-card::before {
+  content: "♠  ♥  ♦  ♣";
+  display: block;
+  margin-bottom: -2px;
+  color: #f6d76a;
+  text-align: center;
+  font-size: 17px;
+  letter-spacing: 5px;
+  text-shadow: 0 2px 14px rgba(246,215,106,.25);
+}
+
+#joinScreen .auth-card .join-heading {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+#joinScreen .auth-card .join-heading h2 {
+  margin-left: 34px;
+  margin-right: 34px;
+}
+
+#joinScreen .auth-card .join-back-button {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 50%;
+  background: rgba(0,0,0,.25);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+  box-shadow: none;
+}
+
+#joinScreen .auth-card .join-back-button:hover {
+  transform: translateY(-50%);
+  filter: brightness(1.08);
+  box-shadow: none;
+}
+
+#joinScreen .auth-card .join-back-button:active {
+  transform: translateY(-50%) scale(.94);
+}
+
+#joinScreen .auth-card h2 {
+  margin: 0 0 4px;
+  color: #fff;
+  font-size: clamp(20px, 5vw, 25px);
+  line-height: 1.15;
+  letter-spacing: .3px;
+  text-shadow: 0 3px 16px rgba(0,0,0,.35);
+}
+
+#joinScreen .auth-card h2::after {
+  content: "READY TO PLAY?";
+  display: block;
+  margin-top: 5px;
+  color: rgba(255,255,255,.55);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 3px;
+}
+
+#joinScreen .auth-card input {
+  min-height: 42px;
+  padding: 9px 13px;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 12px;
+  outline: none;
+  background: rgba(0,0,0,.28);
+  color: #fff;
+  font-size: 14px;
+  transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+
+#joinScreen .auth-card .join-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+#joinScreen .auth-card .join-field label {
+  flex: 0 0 78px;
+  margin: 0;
+  color: rgba(255,255,255,.78);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .2px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+#joinScreen .auth-card .join-field input {
+  flex: 1;
+  min-width: 0;
+}
+
+#joinScreen .auth-card input[readonly] {
+  cursor: default;
+  opacity: .95;
+}
+
+#joinScreen .auth-card input::placeholder {
+  color: rgba(255,255,255,.48);
+}
+
+#joinScreen .auth-card input:focus {
+  border-color: rgba(246,215,106,.72);
+  background: rgba(0,0,0,.38);
+  box-shadow: 0 0 0 3px rgba(246,215,106,.10);
+}
+
+#joinScreen .auth-card button {
+  min-height: 44px;
+  margin-top: 2px;
+  border-radius: 13px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: linear-gradient(135deg, #d8b84f, #f1d66f);
+  color: #18200e;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: .8px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.28);
+  transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
+}
+
+#joinScreen .auth-card button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 13px 28px rgba(0,0,0,.34);
+}
+
+#joinScreen .auth-card button:active {
+  transform: translateY(1px) scale(.99);
+}
+
+@media (max-width: 480px) {
+  #joinScreen .auth-card {
+    width: min(340px, calc(100vw - 28px));
+    padding: 17px 16px 15px;
+    gap: 7px;
+    border-radius: 16px;
+  }
+
+  #joinScreen .auth-card .join-back-button {
+    width: 30px;
+    height: 30px;
+    min-height: 30px;
+    font-size: 21px;
+  }
+
+  #joinScreen .auth-card .join-heading h2 {
+    margin-left: 30px;
+    margin-right: 30px;
+  }
+
+  #joinScreen .auth-card h2 {
+    font-size: 21px;
+    margin-bottom: 2px;
+  }
+
+  #joinScreen .auth-card h2::after {
+    margin-top: 4px;
+    font-size: 7px;
+    letter-spacing: 2px;
+  }
+
+  #joinScreen .auth-card .join-field {
+    gap: 7px;
+  }
+
+  #joinScreen .auth-card .join-field label {
+    flex-basis: 70px;
+    font-size: 11px;
+  }
+
+  #joinScreen .auth-card input,
+  #joinScreen .auth-card button {
+    min-height: 40px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    font-size: 13px;
+  }
+
+  #joinScreen .auth-card::before {
+    font-size: 15px;
+    letter-spacing: 4px;
+    margin-bottom: -3px;
+  }
+}
+
+/* Solo connection indicator and manual refresh button */
+.solo-connection-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 9px;
+    border-radius: 14px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    border: 1px solid #b8d9c0;
+    color: #176b35;
+    background: #e9f8ee;
+}
+.solo-connection-status .solo-connection-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    display: inline-block;
+}
+.solo-connection-status.offline {
+    color: #a52323;
+    background: #fff0f0;
+    border-color: #efb4b4;
+}
+#btnGameRefresh {
+    border: 1px solid #888;
+    border-radius: 8px;
+    padding: 7px 10px;
+    cursor: pointer;
+    font-weight: 700;
+}
+#btnGameRefresh:disabled {
+    opacity: .55;
+    cursor: wait;
+}
+@media (max-width: 600px) {
+    .topbar-history {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+    }
+    #btnGameRefresh {
+        padding: 6px 8px;
+    }
+}
+
+</style>
+
+</head>
+<body>
+
+  <!-- JOIN SCREEN -->
+  <section id="joinScreen" class="join-screen screen-layer">
+    <div class="auth-card">
+      <div class="join-heading">
+        <button
+            type="button"
+            class="join-back-button"
+            onclick="goToHomepage()"
+            aria-label="Back to homepage"
+            title="Back to homepage"
+        >
+          ←
+        </button>
+
+        <h2>🎮 Join Rummy Table</h2>
+      </div>
+
+      <div class="join-field">
+        <label for="tableIdInput">Table No :</label>
+        <input
+            id="tableIdInput"
+            type="number"
+            inputmode="numeric"
+            value="100000"
+            readonly
+        >
+      </div>
+
+      <div class="join-field">
+        <label for="password">Password :</label>
+        <input
+            id="password"
+            type="password"
+            value="xxxx"
+            readonly
+        >
+      </div>
+
+      <div class="join-field">
+        <label for="nickname">Name :</label>
+        <input
+            id="nickname"
+            type="text"
+            value="NNNN"
+            maxlength="15"
+            readonly
+        >
+      </div>
+
+      <button type="button" onclick="startSoloGame()">Join Game (80 chips)</button>
+    </div>
+  </section>
+
+  <!-- LOBBY SCREEN -->
+  <section id="lobbyScreen" class="lobby-screen screen-layer hidden">
+    <div class="lobby-wrap">
+      <h2>🎮 Waiting Room</h2>
+
+      <div class="lobby-card">
+        <div>Table: <span id="lobbyTableId">-</span></div>
+        <div>Your Seat: <span id="lobbySeat">-</span></div>
+        <div>Players: <span id="lobbyPlayers">0</span>/6</div>
+        <div>Starts In: <span id="lobbyTimer">60</span> sec</div>
+      </div>
+
+      <h3>Joined Players</h3>
+
+      <div id="lobbyPlayerList" class="lobby-player-list">
+        <div id="seat1">Seat 1: Empty</div>
+        <div id="seat2">Seat 2: Empty</div>
+        <div id="seat3">Seat 3: Empty</div>
+        <div id="seat4">Seat 4: Empty</div>
+        <div id="seat5">Seat 5: Empty</div>
+        <div id="seat6">Seat 6: Empty</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GAME SCREEN -->
+  <div id="app" class="game-viewport hidden">
+    <div id="gameStage" class="game-stage">
+
+     <header class="topbar">
+
+    <div class="topbar-item">
+        Table:
+        <span id="tableIdDisplay">-</span>
+    </div>
+
+    <div class="topbar-item">
+        Dealer:
+        <span id="dealerName">-</span>
+    </div>
+
+    <div class="topbar-item turn-timer-box">
+        ⏱ Turn Timer:
+        <span id="turnTimer">40</span>
+    </div>
+
+    <div class="topbar-item current-turn-box">
+        Current Turn:
+        <span id="currentTurnPlayer">-</span>
+    </div>
+
+    <div class="topbar-history">
+        <button id="btnHistory" type="button">History</button>
+        <span id="connectionStatus" class="solo-connection-status online" title="Checking connection">
+            <span class="solo-connection-dot"></span>
+            <span id="connectionStatusText">ONLINE</span>
+        </span>
+       
+    </div>
+
+</header>
+
+      <main class="table">
+        <section id="opponents" class="opponents" aria-label="Opponents">
+          <div id="opp1" class="opponent-seat"></div>
+          <div id="opp2" class="opponent-seat"></div>
+          <div id="opp3" class="opponent-seat"></div>
+          <div id="opp4" class="opponent-seat"></div>
+          <div id="opp5" class="opponent-seat"></div>
+        </section>
+
+        <section class="center">
+
+        <div class="table-piles">
+
+            <!-- OPEN CARD -->
+
+            <div class="open-area">
+
+
+                            
+                <button
+                    id="openPileHistoryBtn"
+                    class="open-history-btn"
+                    onclick="showOpenPileHistory(event)"
+                    title="View discarded cards"
+                >
+                    ≡≡≡
+                </button>
+
+                <div
+                    id="openVisual"
+                    class="table-card clickable-pile"
+                    draggable="true">
+                    -
+                </div>
+
+                
+
+
+            </div>
+
+            <!-- JOKER + STOCK -->
+
+            <div class="stock-area">
+
+                <div
+                    id="jokerVisual"
+                    class="table-card joker-card">
+                    -
+                </div>
+
+                <div
+                    id="stockCard"
+                    class="card-back clickable-pile">
+                </div>
+
+            </div>
+
+            <!-- DECLARE BUTTON -->
+
+            <button
+                id="btnDeclare"
+                class="table-action-button declare-button"
+                type="button"
+                onclick="declareGame()">
+                Declare
+            </button>
+
+            <!-- DROP BUTTON -->
+
+            <button
+                id="dropBtn"
+                class="table-action-button drop-button"
+                type="button"
+                onclick="dropCurrentDeal()">
+                DROP
+            </button>
+
+            <div id="declarationTimer"></div>
+
+        </div>
+
+    </section>
+
+        <div
+          id="myPlayerPanel"
+          class="my-player-panel">
+
+          <div class="my-player-details">
+
+              <div id="myInfo">
+                  You
+              </div>
+
+              <div id="myScore">
+                  Score : 0
+              </div>
+
+              <div id="dealScore">
+                  Deal Score : 0
+              </div>
+
+              <button
+                  id="btnDiscard"
+                  class="player-discard-button"
+                  type="button"
+                  onclick="discard()">
+                  Discard
+              </button>
+
+          </div>
+
+          <div
+              id="dropStatus"
+              class="drop-status">
+          </div>
+
+      </div>
+
+        <section id="my-hand" class="hand" aria-label="My cards">
+          <div class="group-box" id="group0"></div>
+          <div class="group-box" id="group1"></div>
+          <div class="group-box" id="group2"></div>
+          <div class="group-box" id="group3"></div>
+          <div class="group-box" id="group4"></div>
+          <div class="group-box" id="group5"></div>
+        </section>
+      </main>
+
+      <aside id="chat-box" class="chat"></aside>
+    </div>
+  </div>
+
+  <!-- DECLARE PANEL -->
+  <section id="declarePanel" class="declare-panel hidden">
+    <div class="declare-content">
+      <h3>Arrange Your Cards</h3>
+      <div class="groups">
+        <div class="group" data-group="0"><h4>Group 1</h4></div>
+        <div class="group" data-group="1"><h4>Group 2</h4></div>
+        <div class="group" data-group="2"><h4>Group 3</h4></div>
+        <div class="group" data-group="3"><h4>Group 4</h4></div>
+        <div class="group" data-group="4"><h4>Group 5</h4></div>
+        <div class="group" data-group="5"><h4>Group 6</h4></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEAL RESULT -->
+  <section id="dealResultModal" class="result-modal">
+    <div class="result-box">
+      <div class="result-header">
+        <span>Deal Results</span>
+        <span id="resultTimer">30</span>
+      </div>
+
+      <div class="next-deal-line">
+        Next Deal in: <span id="observationTimer">30</span>
+      </div>
+
+       <button
+        id="btnSettlement"
+        onclick="openSettlement()"
+        style="display:none;"> Settlement
+       </button>
+
+      <div id="resultJokerCard"></div>
+      <div id="dealResultsContainer"></div>
+    </div>
+  </section>
+
+
+  <div
+    id="settlementPopup"
+    style="
+        display:none;
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,0.65);
+        z-index:9999;
+        align-items:center;
+        justify-content:center;
+    "
+>
+    <div
+        
+        style="
+            width:340px;
+            max-width:90%;
+            background:#ffffff;
+            color:#000000;
+            border-radius:14px;
+            padding:20px;
+            box-shadow:0 8px 30px rgba(0,0,0,0.35);
+            text-align:center;
+        "
+    >
+
+        <div
+            style="
+                font-size:22px;
+                font-weight:bold;
+                color:#1565c0;
+                margin-bottom:15px;
+            "
+        >
+            Settlement
+        </div>
+
+        <div
+            style="
+                font-size:14px;
+                color:#555;
+                margin-bottom:15px;
+            "
+        >
+            Proposed Settlement
+        </div>
+
+        <div
+            id="settlementPlayers"
+            style="
+                background:#f5f7fa;
+                border-radius:10px;
+                padding:12px;
+                margin-bottom:18px;
+            "
+        ></div>
+
+        <div
+            id="settlementStatus"
+            style="
+                min-height:24px;
+                margin-bottom:12px;
+                font-weight:bold;
+                color:#1565c0;
+            "
+        ></div>
+
+        <div
+            style="
+                display:flex;
+                gap:12px;
+                justify-content:center;
+            "
+        >
+
+            <button
+                id="btnSettlementAccept"
+                onclick="respondSettlement('ACCEPT')"
+                style="
+                    background:#2e7d32;
+                    color:white;
+                    border:none;
+                    border-radius:8px;
+                    padding:10px 22px;
+                    font-weight:bold;
+                    cursor:pointer;
+                "
+            >
+                Accept
+            </button>
+
+            <button
+                id="btnSettlementCancel"
+                onclick="respondSettlement('CANCEL')"
+                style="
+                    background:#c62828;
+                    color:white;
+                    border:none;
+                    border-radius:8px;
+                    padding:10px 22px;
+                    font-weight:bold;
+                    cursor:pointer;
+                "
+            >
+                Cancel
+            </button>
+
+        </div>
+
+    </div>
+</div>
+  
+ <!-- TABLE COMPLETED -->
+<section id="tableCompletedScreen">
+
+  <div class="winner-card">
+
+    <div class="trophy">🏆</div>
+      
+    <h1>TABLE COMPLETED</h1>
+
+
+    <div class="table-scroll">
+
+      <table id="finalScoreTable">
+
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>Score</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        <tbody id="finalScoreBody"></tbody>
+
+      </table>
+
+    </div>
+
+
+    <p>Thank you for playing</p>
+
+
+    <!-- HOME BUTTON -->
+    <button
+      class="home-button"
+      onclick="goToHome()"
+    >
+      🏠 HOME
+    </button>
+
+
+  </div>
+
+</section>
+
+    <div
+        id="settlementPopup"
+        class="settlement-popup"
+        style="display:none;"
+    >
+        <div class="settlement-box">
+
+            <h3>Settlement</h3>
+
+            <div id="settlementPlayers"></div>
+
+            <div class="settlement-actions">
+
+                <button
+                    id="btnSettlementAccept"
+                    onclick="respondSettlement('ACCEPT')"
+                >
+                    Accept
+                </button>
+
+                <button
+                    id="btnSettlementCancel"
+                    onclick="respondSettlement('CANCEL')"
+                >
+                    Cancel
+                </button>
+
+            </div>
+
+            <div id="settlementStatus"></div>
+
+        </div>
+    </div>
+
+
+  <div id="historyPopup" class="history-popup hidden">
+
+    <div class="history-popup-box">
+
+        <div class="history-popup-header">
+
+            <div class="history-popup-title">
+                Deal History
+            </div>
+
+            <button
+                id="btnCloseHistory"
+                class="history-close-btn"
+                type="button"
+            >
+                ✕
+            </button>
+
+        </div>
+
+        <div class="history-table-wrapper">
+
+            <table id="historyTable">
+
+                <thead id="historyTableHead"></thead>
+
+                <tbody id="historyTableBody"></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+  <div id="rotateDeviceOverlay">
+    <div class="rotate-message">
+        <div class="rotate-icon">📱↻</div>
+        <div>Please rotate your phone</div>
+        <small>This game is designed for landscape mode</small>
+    </div>
+</div>
+
+<div
+    id="openPilePopup"
+    class="open-pile-popup"
+    onclick="closeOpenPileHistory()"
+>
+    <div
+        class="open-pile-popup-box"
+        onclick="event.stopPropagation()"
+    >
+        <div class="open-pile-popup-title">
+            Discarded Cards
+        </div>
+
+        <div
+            id="openPileHistoryCards"
+            class="open-pile-history-cards"
+        ></div>
+
+        <button
+            class="open-pile-close-btn"
+            onclick="closeOpenPileHistory()"
+        >
+            Close
+        </button>
+
+    </div>
+</div>
+
+
+  <script>
+    function goToHomepage() {
+      window.location.replace("homepage.html");
+    }
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+ <script src="solo.js?v=physicaltiktik20261018"></script>
+  <script src="responsive.js"></script>
+
+<script>
+(function () {
+    function updateSoloConnectionStatus() {
+        const badge = document.getElementById("connectionStatus");
+        const label = document.getElementById("connectionStatusText");
+        if (!badge || !label) return;
+
+        let offline = !navigator.onLine;
+        try {
+            if (typeof networkOffline !== "undefined" && networkOffline) offline = true;
+        } catch (e) {}
+
+        badge.classList.toggle("offline", offline);
+        badge.classList.toggle("online", !offline);
+        badge.title = offline ? "Offline — waiting for connection" : "Connection available";
+        label.textContent = offline ? "OFFLINE" : "ONLINE";
+    }
+    window.addEventListener("online", updateSoloConnectionStatus);
+    window.addEventListener("offline", updateSoloConnectionStatus);
+    updateSoloConnectionStatus();
+    setInterval(updateSoloConnectionStatus, 500);
+})();
+</script>
+
+
+<script>
+(function () {
+    const button = document.getElementById("btnGameRefresh");
+    if (!button) return;
+    button.addEventListener("click", async function () {
+        const originalText = button.textContent;
+        button.disabled = true;
+        button.textContent = "Refreshing…";
+        try {
+            if (typeof refreshGame === "function") {
+                await refreshGame();
+            }
+        } finally {
+            setTimeout(() => {
+                button.disabled = false;
+                button.textContent = originalText;
+            }, 800);
+        }
+    });
+})();
+</script>
+
+</body>
+</html>

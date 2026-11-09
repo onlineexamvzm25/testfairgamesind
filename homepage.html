@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+>
+
+<title>Indian Rummy</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+    <link rel="stylesheet" href="homepage.css">
+    <style>
+      /* Keep the four main game options in a compact 2 x 2 grid. */
+      .games { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:12px !important; }
+      .games > .game-button { width:100% !important; min-width:0; margin:0 !important; }
+      @media(max-width:380px){ .games{gap:8px !important;} .games .game-label{font-size:12px;} .games .game-sub{font-size:10px;} }
+    </style>
+</head>
+
+
+<body>
+
+<!-- Background effects -->
+
+<div class="bg-glow glow-one"></div>
+<div class="bg-glow glow-two"></div>
+<div class="bg-glow glow-three"></div>
+
+<div class="floating-card card-one">♠</div>
+<div class="floating-card card-two">♥</div>
+<div class="floating-card card-three">♦</div>
+
+
+<!-- Loading -->
+
+<div id="loading" class="loading">
+
+    <div class="loader-box">
+
+        <div class="loader-logo">🎴</div>
+
+        <div id="loadingMessage" class="loader-text">
+            LOADING RUMMY
+        </div>
+
+        <button
+            id="retryHomeButton"
+            class="retry-home-button"
+            onclick="retryHome()"
+            style="display:none;"
+        >
+            RETRY
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     MAIN HOME
+     ========================================================= -->
+
+<main class="app">
+
+
+    <!-- Header -->
+
+    <header class="header">
+
+        <div>
+
+            <div class="brand-small">
+                INDIAN RUMMY
+            </div>
+
+            <div
+                id="userName"
+                class="user-name"
+            >
+                PLAYER
+            </div>
+
+        </div>
+
+        <button
+            id="activeGameBtn"
+            onclick="resumeActiveGame()"
+            style="display:none;">
+            Active Game
+        </button>
+        <button
+            class="profile-button"
+            onclick="openProfile()"
+            aria-label="Profile"
+        >
+            👤
+        </button>
+
+    </header>
+
+
+    <!-- Balance -->
+
+    <section class="balance-card">
+
+        <div class="balance-label">
+            AVAILABLE CHIPS
+        </div>
+
+        <div class="balance-row">
+
+            <div class="coin">
+                🪙
+            </div>
+
+            <div
+                id="balance"
+                class="balance"
+            >
+                0.00
+            </div>
+
+        </div>
+
+        <div class="balance-sub">
+            Free game • No cash • Play for fun
+        </div>
+
+    </section>
+
+
+    <!-- Games -->
+
+    <div class="section-title">
+        PLAY
+    </div>
+
+
+    <section class="games">
+
+
+        <button
+            class="game-button solo-button"
+            onclick="location.href='solo.html'"
+        >
+
+            <span class="game-icon">
+                🎴
+            </span>
+
+            <span class="game-label">
+                PLAY YOURSELF
+            </span>
+
+            <span class="game-sub">
+                Solo Game
+            </span>
+
+        </button>
+
+
+        <button
+            class="game-button friends-button"
+            onclick="location.href='tablepage.html'"
+        >
+
+            <span class="game-icon">
+                👥
+            </span>
+
+            <span class="game-label">
+                FRIENDS POOL
+            </span>
+
+            <span class="game-sub">
+                Friends Game Pool
+            </span>
+
+        </button>
+
+
+        <button
+            class="game-button friends-button"
+            onclick="location.href='tablepage.html?game_type=POINTS'"
+        >
+
+            <span class="game-icon">
+                👥
+            </span>
+
+            <span class="game-label">
+                FRIENDS POINTS
+            </span>
+
+            <span class="game-sub">
+                Friends Game Points
+            </span>
+
+        </button>
+
+
+        <button
+            class="game-button friends-button andar-bahar-button"
+            onclick="openAndarBahar()"
+        >
+
+            <span class="game-icon">🃏</span>
+            <span class="game-label">ANDAR BAHAR</span>
+            <span class="game-sub">Play Andar Bahar</span>
+
+        </button>
+
+
+
+    </section>
+
+
+    <!-- Account -->
+
+    <div class="section-title">
+        ACCOUNT
+    </div>
+
+
+    <section class="account-menu">
+
+
+        <button
+            class="menu-button"
+            onclick="openProfile()"
+        >
+
+            <span class="menu-icon">
+                👤
+            </span>
+
+            <span>
+                <span class="menu-text">
+                    Profile
+                </span>
+
+                <span class="menu-sub">
+                    Your account details
+                </span>
+            </span>
+
+        </button>
+
+
+        <button
+            class="menu-button"
+            onclick="openChangePassword()"
+        >
+
+            <span class="menu-icon">
+                🔐
+            </span>
+
+            <span>
+                <span class="menu-text">
+                    Password
+                </span>
+
+                <span class="menu-sub">
+                    Change password
+                </span>
+            </span>
+
+        </button>
+
+
+        <button
+            class="menu-button"
+            onclick="featureAlert('Deposit')"
+        >
+
+            <span class="menu-icon">
+                💰
+            </span>
+
+            <span>
+                <span class="menu-text">
+                    Deposit
+                </span>
+
+                <span class="menu-sub">
+                    Available soon
+                </span>
+            </span>
+
+        </button>
+
+
+        <button
+            class="menu-button"
+            onclick="featureAlert('Withdraw')"
+        >
+
+            <span class="menu-icon">
+                💸
+            </span>
+
+            <span>
+                <span class="menu-text">
+                    Withdraw
+                </span>
+
+                <span class="menu-sub">
+                    Available soon
+                </span>
+            </span>
+
+        </button>
+
+
+        <button
+            class="menu-button"
+            onclick="openStatement()"
+        >
+
+            <span class="menu-icon">
+                📋
+            </span>
+
+            <span>
+                <span class="menu-text">
+                    Statement
+                </span>
+
+                <span class="menu-sub">
+                    Account transactions
+                </span>
+            </span>
+
+        </button>
+
+
+        <button
+            class="menu-button"
+            onclick="logout()"
+        >
+
+            <span class="menu-icon">
+                🚪
+            </span>
+
+            <span>
+                <span class="menu-text">
+                    Logout
+                </span>
+
+                <span class="menu-sub">
+                    Sign out of your account
+                </span>
+            </span>
+
+        </button>
+
+
+    </section>
+
+
+    <div class="footer">
+        Indian Rummy • Free Chips • Play for Fun
+    </div>
+
+
+</main>
+
+
+<!-- =========================================================
+     PROFILE SHEET
+     ========================================================= -->
+
+<div
+    id="profileModal"
+    class="modal"
+    onclick="closeOnBackdrop(event,'profileModal')"
+>
+
+    <section class="sheet">
+
+        <div class="sheet-handle"></div>
+
+        <div class="sheet-header">
+
+            <div class="sheet-title">
+                My Profile
+            </div>
+
+            <button
+                class="close-button"
+                onclick="closeModal('profileModal')"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <div
+            id="profileMessage"
+            class="message"
+        ></div>
+
+
+        <div class="profile-grid">
+
+
+            <div class="info-card">
+
+                <div class="info-label">
+                    Name
+                </div>
+
+                <div
+                    id="profileName"
+                    class="info-value"
+                >
+                    -
+                </div>
+
+            </div>
+
+
+            <div class="info-card">
+
+                <div class="info-label">
+                    Mobile Number
+                </div>
+
+                <div
+                    id="profilePhone"
+                    class="info-value locked-info"
+                >
+                    -
+                </div>
+
+            </div>
+
+
+            <div class="info-card">
+
+                <div class="info-label">
+                    Email
+                </div>
+
+                <div
+                    id="profileEmail"
+                    class="info-value locked-info"
+                >
+                    -
+                </div>
+
+            </div>
+
+
+            <div class="info-card">
+
+                <div class="info-label">
+                    Date of Birth
+                </div>
+
+                <div
+                    id="profileDob"
+                    class="info-value locked-info"
+                >
+                    -
+                </div>
+
+            </div>
+
+
+            <div class="info-card">
+
+                <div class="info-label">
+                    Account Balance
+                </div>
+
+                <div
+                    id="profileBalance"
+                    class="info-value"
+                >
+                    -
+                </div>
+
+            </div>
+
+
+            <div class="info-card">
+
+                <div class="info-label">
+                    Registered On
+                </div>
+
+                <div
+                    id="profileCreated"
+                    class="info-value"
+                >
+                    -
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<!-- =========================================================
+     CHANGE PASSWORD SHEET
+     ========================================================= -->
+
+<div
+    id="passwordModal"
+    class="modal"
+    onclick="closeOnBackdrop(event,'passwordModal')"
+>
+
+    <section class="sheet">
+
+        <div class="sheet-handle"></div>
+
+        <div class="sheet-header">
+
+            <div class="sheet-title">
+                Change Password
+            </div>
+
+            <button
+                class="close-button"
+                onclick="closeModal('passwordModal')"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <div
+            id="passwordMessage"
+            class="message"
+        ></div>
+
+
+        <div class="field">
+
+            <label>
+                CURRENT PASSWORD
+            </label>
+
+            <input
+                id="currentPassword"
+                type="password"
+                maxlength="7"
+                autocomplete="current-password"
+            >
+
+        </div>
+
+
+        <div class="field">
+
+            <label>
+                NEW PASSWORD (4–7 CHARACTERS)
+            </label>
+
+            <input
+                id="newPassword"
+                type="password"
+                maxlength="7"
+                autocomplete="new-password"
+            >
+
+        </div>
+
+
+        <div class="field">
+
+            <label>
+                CONFIRM NEW PASSWORD
+            </label>
+
+            <input
+                id="confirmPassword"
+                type="password"
+                maxlength="7"
+                autocomplete="new-password"
+            >
+
+        </div>
+
+
+        <button
+            id="changePasswordButton"
+            class="primary-button"
+            onclick="changePassword()"
+        >
+            CHANGE PASSWORD
+        </button>
+
+    </section>
+
+</div>
+
+
+<!-- =========================================================
+     STATEMENT SHEET
+     ========================================================= -->
+
+<div
+    id="statementModal"
+    class="modal"
+    onclick="closeOnBackdrop(event,'statementModal')"
+>
+
+    <section class="sheet">
+
+        <div class="sheet-handle"></div>
+
+        <div class="sheet-header">
+
+            <div class="sheet-title">
+                Account Statement
+            </div>
+
+            <button
+                class="close-button"
+                onclick="closeModal('statementModal')"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <div
+            id="statementMessage"
+            class="message"
+        ></div>
+
+
+        <div id="statementList">
+
+            <div class="statement-empty">
+                Loading statement...
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<div id="activeGameInfoBox" class="active-game-box" style="display:none;">
+    <div class="active-game-content">
+        <h3>Active Game</h3>
+
+        <div id="activeGameDetails"></div>
+
+        <button onclick="closeActiveGameInfo()">Close</button>
+    </div>
+</div>
+
+
+    <script src="homepage.js"></script>
+</body>
+</html>
+```

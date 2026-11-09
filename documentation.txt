@@ -1,0 +1,338 @@
+Master Flow
+Developer
+   ↓
+Insert Table ID + Password into DB
+   ↓
+Players receive Table ID + Password
+   ↓
+Player joins
+   ↓
+crdg_join_table()
+   ↓
+Seat assigned
+   ↓
+First player starts 60 sec lobby timer
+   ↓
+More players join
+   ↓
+crdg_get_table_state()
+   ↓
+60 sec completed
+   ↓
+crdg_start_game()
+   ↓
+Create session
+Choose dealer
+Choose joker
+Create stock pile
+Create open pile
+Deal cards
+   ↓
+Players play
+   ↓
+Draw
+Discard
+Validate Turn
+Declare
+   ↓
+Score Calculation
+   ↓
+History Saved
+
+
+===============================
+Tables
+crdg_game_tables: Stores waiting room information
+table_id
+password
+status
+max_players
+entry_fee
+lobby_started_at
+game_started_at
+
+
+crdg_players:
+
+user_id
+display_name
+last_seen
+
+
+
+crdg_table_players:
+table_id
+user_id
+seat_no
+is_host
+is_active
+connection_status
+
+
+crdg_game_sessions:  One row per game.
+session_id
+table_id
+dealer_seat
+joker_card
+current_turn_seat
+stock_pile
+open_pile
+total_pot
+original_player_count
+started_at
+completed_at
+winner_id
+
+crdg_player_hands:
+
+session_id
+table_id
+user_id
+card
+
+
+
+crdg_player_scores:
+
+session_id
+table_id
+user_id
+points
+is_eliminated
+
+=============================================
+
+stored functions
+
+===============================================
+
+crdg_get_next_seat:   Find first empty seat
+Find first empty seat
+Loop 1..6
+If seat empty
+Return seat
+
+
+
+crdg_join_table:
+
+Validate table exists
+Validate password
+Validate waiting status
+Validate max players
+Validate nickname unique
+Get seat
+Insert player
+Start lobby timer if first player
+Return seat
+
+seat_no
+status
+message
+
+
+crdg_get_table_state:Lobby screen polling
+player_count
+seconds_remaining
+status
+
+table_id
+status
+player_count
+seconds_remaining
+lobby_started_at
+
+
+crdg_get_lobby_players:  Seat display
+
+seat_no
+display_name
+
+crdg_start_game(): Create actual game
+
+Lock table
+Count players
+Calculate pot
+Create session
+Build 106 card deck
+Shuffle
+Choose Joker
+Choose Open Card
+Choose Dealer
+Store session values
+Call deal_cards
+Return session info
+
+
+session_id
+dealer_seat
+joker_card
+
+
+crdg_deal_cards:Distribute cards
+Loop players
+Give 13 cards each
+Insert into player_hands
+Update stock pile
+
+
+crdg_get_game_state:Load player screen
+
+hand
+open card
+joker
+turn
+
+
+crdg_validate_turn():Ensure player turn
+Current seat
+Player seat
+Match?
+
+
+crdg_draw_card:Draw from stock/open pile
+
+Validate turn
+Remove card from pile
+Add card to hand  
+
+crdg_discard_card: Discard selected card
+
+Validate turn
+Remove from hand
+Push to open pile
+Move turn
+
+crdg_validate_declaration: Check rummy rules
+
+Pure Sequence
+Second Sequence
+Valid Sets
+Valid Runs
+13 cards
+
+crdg_declare():Player declares game
+Validate declaration
+If invalid
+    +80 penalty
+Else
+    Winner
+    Session complete
+    Score entry
+	
+	
+crdg_card_value:Convert card to points
+A = 10
+K = 10
+Q = 10
+J = 10
+10 = 10
+9 = 9
+...
+2 = 2
+
+
+crdg_calculate_player_score:  Count deadwood points
+
+Remaining unmatched cards
+
+
+
+crdg_settlement:Finalize game
+ Winner
+Losers
+Points
+Eliminations
+
+
+crdg_get_last_game_history: Show previous game summary
+winner
+scores
+pot
+players
+date
+
+
+
+============================================================================
+
+
+4. Frontend Flow
+
+============================================================================
+
+
+
+Join Screen:
+
+Table ID
+Password
+Nickname
+Join
+
+calls :  crdg_join_table()
+
+-----------------------------------
+
+Lobby Screen:
+
+Seats
+Players
+Countdown
+
+calls : crdg_get_table_state()
+crdg_get_lobby_players()
+
+
+----------------------------------
+
+Game Screen:
+Hand
+Open Card
+Turn
+Draw
+Discard
+Declare
+
+calls :  crdg_get_game_state()
+
+
+---------------------------------
+Actions
+-------------------------------
+Draw: crdg_draw_card()
+
+Discard: crdg_discard_card()
+
+Declare:  crdg_declare()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

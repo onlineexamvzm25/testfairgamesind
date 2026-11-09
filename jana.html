@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#101827">
+  <title>JANA OR PATTU</title>
+  <link rel="stylesheet" href="jana.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="index.html" aria-label="Back to home">
+        <span class="brand-mark">♠</span>
+        <span>JANA <b>OR</b> PATTU</span>
+      </a>
+      <div class="user-chip"><span class="online-dot"></span><span id="userName">Loading account…</span></div>
+    </header>
+
+    <section id="homeView" class="view">
+      <div class="hero">
+        <div class="eyebrow">PRIVATE TABLES · PLAY WITH FRIENDS</div>
+        <h1>JANA <span>OR</span> PATTU</h1>
+        <p>Create a private table and invite your friends using its table code.</p>
+      </div>
+
+      <div class="action-grid">
+        <article class="action-card">
+          <div class="action-icon">＋</div>
+          <h2>Create a table</h2>
+          <p>Choose the point value and create a private friends table.</p>
+          <div class="point-label">SELECT POINT VALUE</div>
+          <div class="point-options" role="group" aria-label="Point value">
+            <button class="point-option selected" data-points="10" type="button">10</button>
+            <button class="point-option" data-points="50" type="button">50</button>
+            <button class="point-option" data-points="100" type="button">100</button>
+            <button class="point-option" data-points="500" type="button">500</button>
+          </div>
+          <button id="createButton" class="primary-button" type="button">CREATE TABLE</button>
+        </article>
+
+        <article class="action-card join-card">
+          <div class="action-icon">⇢</div>
+          <h2>Join a table</h2>
+          <p>Enter the table code shared by your friend.</p>
+          <label class="point-label" for="joinCode">TABLE CODE</label>
+          <input id="joinCode" class="text-input code-input" type="text" maxlength="12" placeholder="Enter table code" autocomplete="off">
+          <button id="joinButton" class="secondary-button" type="button">JOIN TABLE</button>
+        </article>
+      </div>
+      <a class="home-link" href="index.html">← Back to main home</a>
+    </section>
+
+    <section id="tableView" class="view hidden">
+      <div class="table-heading">
+        <div>
+          <div class="eyebrow">YOUR PRIVATE FRIENDS TABLE</div>
+          <h1>Waiting Room</h1>
+        </div>
+        <button id="refreshButton" class="icon-button" type="button" aria-label="Refresh table">↻</button>
+      </div>
+
+      <div class="table-code-card">
+        <div>
+          <div class="point-label">SHARE THIS TABLE CODE WITH FRIENDS</div>
+          <div id="tableCode" class="table-code">--------</div>
+        </div>
+        <button id="copyCodeButton" class="copy-button" type="button">COPY</button>
+      </div>
+
+      <div class="table-summary">
+        <div><span class="summary-label">POINT VALUE</span><strong id="tablePoints">—</strong></div>
+        <div><span class="summary-label">PLAYERS</span><strong id="playerCount">0 / 6</strong></div>
+        <div><span class="summary-label">GAME</span><strong id="gameNumber">Not started</strong></div>
+      </div>
+
+      <div class="players-panel">
+        <div class="panel-heading">
+          <h2>Players at the table</h2>
+          <span class="live-label">Table roster</span>
+        </div>
+        <div id="playersList" class="players-list">
+          <div class="empty-seat">Loading players…</div>
+        </div>
+      </div>
+
+      <div id="tableMessage" class="message" role="status"></div>
+      <div class="table-actions">
+        <button id="startGameButton" class="primary-button" type="button">START FIRST GAME</button>
+        <button id="leaveButton" class="leave-button" type="button">LEAVE TABLE</button>
+      </div>
+      <p class="small-note">A disconnected player keeps their seat and can reconnect. Choosing Leave Table permanently leaves this table.</p>
+    </section>
+
+    <div id="globalMessage" class="toast" role="status" aria-live="polite"></div>
+    <div id="busyOverlay" class="busy-overlay hidden"><div class="spinner"></div><span id="busyText">Please wait…</span></div>
+  </main>
+  <script src="jana.js"></script>
+</body>
+</html>

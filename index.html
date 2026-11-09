@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="theme-color" content="#080b14">
+    <title>Indian Rummy - Login</title>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { margin: 0; width: 100%; min-height: 100%; }
+        body {
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 18px;
+            background:
+                radial-gradient(circle at 20% 10%, rgba(31, 111, 235, .20), transparent 32%),
+                radial-gradient(circle at 90% 90%, rgba(0, 197, 129, .14), transparent 35%),
+                #080b14;
+            color: #fff;
+            font-family: Arial, Helvetica, sans-serif;
+            overflow-x: hidden;
+        }
+
+        .app { width: 100%; max-width: 430px; }
+
+        .card {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            padding: 28px 22px 24px;
+            border: 1px solid rgba(255,255,255,.09);
+            border-radius: 24px;
+            background: rgba(18, 22, 34, .94);
+            box-shadow: 0 22px 60px rgba(0,0,0,.45);
+            animation: cardIn .45s ease both;
+        }
+
+        .glow {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            filter: blur(45px);
+            opacity: .18;
+            pointer-events: none;
+        }
+        .glow.one { background: #2b7cff; top: -80px; right: -60px; }
+        .glow.two { background: #00c981; bottom: -90px; left: -70px; }
+
+        .brand { position: relative; text-align: center; margin-bottom: 24px; }
+        .logo {
+            width: 68px;
+            height: 68px;
+            margin: 0 auto 12px;
+            display: grid;
+            place-items: center;
+            border-radius: 20px;
+            font-size: 34px;
+            background: linear-gradient(145deg, #2457d6, #16854b);
+            box-shadow: 0 10px 28px rgba(36,87,214,.28);
+            animation: floatLogo 3s ease-in-out infinite;
+        }
+        .brand h1 { margin: 0; font-size: 29px; font-weight: 900; letter-spacing: .2px; }
+        .brand p { margin: 7px 0 0; color: #aeb5c5; font-size: 13px; }
+
+        .screen { display: none; animation: screenIn .3s ease both; }
+        .screen.active { display: block; }
+
+        .screen-title { margin: 0 0 5px; font-size: 21px; font-weight: 800; }
+        .screen-subtitle { margin: 0 0 18px; color: #969fb2; font-size: 13px; line-height: 1.45; }
+
+        .field { margin: 12px 0; }
+        .field label { display: block; margin: 0 0 7px 3px; color: #c8ceda; font-size: 12px; font-weight: 700; }
+        .input-wrap { position: relative; }
+        input {
+            width: 100%;
+            height: 50px;
+            padding: 0 14px;
+            border: 1px solid #2a3142;
+            border-radius: 13px;
+            outline: none;
+            background: #0e1320;
+            color: #fff;
+            font-size: 16px;
+            transition: border-color .2s, box-shadow .2s, transform .15s;
+        }
+        input:focus {
+            border-color: #3677ff;
+            box-shadow: 0 0 0 3px rgba(54,119,255,.13);
+        }
+        input::placeholder { color: #687286; }
+        input[type="date"] { color-scheme: dark; }
+
+        .password-input { padding-right: 48px; }
+        .toggle-password {
+            position: absolute;
+            right: 5px;
+            top: 5px;
+            width: 40px;
+            height: 40px;
+            border: 0;
+            border-radius: 10px;
+            background: transparent;
+            color: #9ca5b8;
+            font-size: 18px;
+        }
+
+        .btn {
+            width: 100%;
+            min-height: 52px;
+            margin-top: 14px;
+            border: 0;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 900;
+            letter-spacing: .2px;
+            cursor: pointer;
+            transition: transform .12s, filter .2s, opacity .2s;
+        }
+        .btn:active { transform: scale(.98); }
+        .btn:disabled { opacity: .55; cursor: default; }
+        .primary { background: linear-gradient(135deg, #2457d6, #3677ff); box-shadow: 0 10px 24px rgba(36,87,214,.25); }
+        .secondary { background: #202737; }
+        .btn:hover { filter: brightness(1.08); }
+
+        .links { margin-top: 17px; text-align: center; }
+        .link-btn {
+            border: 0;
+            padding: 7px 4px;
+            background: transparent;
+            color: #66a0ff;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .link-btn + .link-btn { margin-left: 8px; }
+
+        .message {
+            display: none;
+            margin: 12px 0 2px;
+            padding: 11px 12px;
+            border-radius: 11px;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        .message.show { display: block; }
+        .message.error { background: rgba(221, 61, 75, .12); color: #ff9ca6; border: 1px solid rgba(221,61,75,.22); }
+        .message.success { background: rgba(0, 201, 129, .10); color: #73e0b8; border: 1px solid rgba(0,201,129,.20); }
+        .message.info { background: rgba(54,119,255,.10); color: #9dbdff; border: 1px solid rgba(54,119,255,.18); }
+
+        .footer { margin-top: 18px; text-align: center; color: #687286; font-size: 11px; }
+        .footer strong { color: #8791a4; }
+
+        @keyframes cardIn { from { opacity: 0; transform: translateY(15px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes screenIn { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes floatLogo { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+
+        @media (max-height: 650px) {
+            body { align-items: flex-start; padding-top: 12px; padding-bottom: 12px; }
+            .card { padding-top: 20px; }
+            .brand { margin-bottom: 15px; }
+            .logo { width: 54px; height: 54px; font-size: 28px; margin-bottom: 7px; }
+            .brand h1 { font-size: 25px; }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <main class="card">
+        <div class="glow one"></div>
+        <div class="glow two"></div>
+
+        <section class="brand">
+            <div class="logo">🃏</div>
+            <h1>Indian Rummy</h1>
+            <p>Free game • No cash • Play for fun</p>
+        </section>
+
+        <!-- LOGIN -->
+        <section id="loginScreen" class="screen active">
+            <h2 class="screen-title">Welcome Back</h2>
+            <p class="screen-subtitle">Login to continue playing.</p>
+
+            <div id="loginMessage" class="message"></div>
+
+            <div class="field">
+                <label for="loginPhone">Mobile Number</label>
+                <input id="loginPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number" autocomplete="tel">
+            </div>
+
+            <div class="field">
+                <label for="loginPassword">Password</label>
+                <div class="input-wrap">
+                    <input id="loginPassword" class="password-input" type="password" maxlength="7" placeholder="4–7 characters" autocomplete="current-password">
+                    <button class="toggle-password" type="button" onclick="togglePassword('loginPassword', this)">👁</button>
+                </div>
+            </div>
+
+            <button id="loginBtn" class="btn primary" type="button" onclick="loginUser()">LOGIN</button>
+
+            <div class="links">
+                <button class="link-btn" type="button" onclick="showScreen('forgotScreen')">Forgot Password?</button>
+                <button class="link-btn" type="button" onclick="showScreen('registerScreen')">Create Account</button>
+            </div>
+        </section>
+
+        <!-- REGISTER -->
+        <section id="registerScreen" class="screen">
+            <h2 class="screen-title">Create Account</h2>
+            <p class="screen-subtitle">Register once and your starting balance is 1000 chips.</p>
+
+            <div id="registerMessage" class="message"></div>
+
+            <div class="field">
+                <label for="regName">Name</label>
+                <input id="regName" type="text" maxlength="7" placeholder="3–7 letters" autocomplete="name">
+            </div>
+
+            <div class="field">
+                <label for="regPhone">Mobile Number</label>
+                <input id="regPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number" autocomplete="tel">
+            </div>
+
+            <div class="field">
+                <label for="regDob">Date of Birth</label>
+                <input id="regDob" type="date" autocomplete="bday">
+            </div>
+
+            <div class="field">
+                <label for="regEmail">Email</label>
+                <input id="regEmail" type="email" maxlength="254" placeholder="example@email.com" autocomplete="email">
+            </div>
+
+            <div class="field">
+                <label for="regPassword">Password</label>
+                <div class="input-wrap">
+                    <input id="regPassword" class="password-input" type="password" maxlength="7" placeholder="4–7 characters" autocomplete="new-password">
+                    <button class="toggle-password" type="button" onclick="togglePassword('regPassword', this)">👁</button>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="regConfirm">Confirm Password</label>
+                <div class="input-wrap">
+                    <input id="regConfirm" class="password-input" type="password" maxlength="7" placeholder="Repeat password" autocomplete="new-password">
+                    <button class="toggle-password" type="button" onclick="togglePassword('regConfirm', this)">👁</button>
+                </div>
+            </div>
+
+            <button id="registerBtn" class="btn primary" type="button" onclick="registerUser()">REGISTER</button>
+
+            <div class="links">
+                <button class="link-btn" type="button" onclick="showScreen('loginScreen')">Already have an account? Login</button>
+            </div>
+        </section>
+
+        <!-- FORGOT PASSWORD -->
+        <section id="forgotScreen" class="screen">
+            <h2 class="screen-title">Forgot Password</h2>
+            <p class="screen-subtitle">Enter your registered mobile, email and DOB to reset your password.</p>
+
+            <div id="forgotMessage" class="message"></div>
+
+            <div class="field">
+                <label for="forgotPhone">Mobile Number</label>
+                <input id="forgotPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number" autocomplete="tel">
+            </div>
+
+            <div class="field">
+                <label for="forgotEmail">Email</label>
+                <input id="forgotEmail" type="email" maxlength="254" placeholder="Registered email" autocomplete="email">
+            </div>
+
+            <div class="field">
+                <label for="forgotDob">Date of Birth</label>
+                <input id="forgotDob" type="date" autocomplete="bday">
+            </div>
+
+            <div class="field">
+                <label for="forgotPassword">New Password</label>
+                <div class="input-wrap">
+                    <input id="forgotPassword" class="password-input" type="password" maxlength="7" placeholder="4–7 characters" autocomplete="new-password">
+                    <button class="toggle-password" type="button" onclick="togglePassword('forgotPassword', this)">👁</button>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="forgotConfirm">Confirm New Password</label>
+                <div class="input-wrap">
+                    <input id="forgotConfirm" class="password-input" type="password" maxlength="7" placeholder="Repeat new password" autocomplete="new-password">
+                    <button class="toggle-password" type="button" onclick="togglePassword('forgotConfirm', this)">👁</button>
+                </div>
+            </div>
+
+            <button id="forgotBtn" class="btn primary" type="button" onclick="forgotPassword()">RESET PASSWORD</button>
+
+            <div class="links">
+                <button class="link-btn" type="button" onclick="showScreen('loginScreen')">Back to Login</button>
+            </div>
+        </section>
+
+        <div class="footer"><strong>Free Game</strong> • No real-money transactions</div>
+    </main>
+</div>
+
+<script>
+    // ============================================================
+    // SUPABASE CONFIGURATION
+    // Replace ONLY these two values with your project values.
+    // Never put a service_role key here.
+    // ============================================================
+    const SUPABASE_URL ='https://dbfycihbcosuxxkrmbhl.supabase.co';
+
+    const SUPABASE_KEY ='sb_publishable_aOyXtAbzrrX0Z9jPAU1qEA_0ZnK35BX';
+
+
+    const supabaseClient =
+    supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+    );
+
+    // ============================================================
+    // COMMON HELPERS
+    // ============================================================
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(screen => {
+            screen.classList.remove('active');
+        });
+        document.getElementById(id).classList.add('active');
+        clearMessages();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function clearMessages() {
+        document.querySelectorAll('.message').forEach(el => {
+            el.className = 'message';
+            el.textContent = '';
+        });
+    }
+
+    function showMessage(id, text, type = 'error') {
+        const el = document.getElementById(id);
+        el.className = 'message show ' + type;
+        el.textContent = text;
+    }
+
+    function setBusy(buttonId, busy, busyText, normalText) {
+        const btn = document.getElementById(buttonId);
+        btn.disabled = busy;
+        btn.textContent = busy ? busyText : normalText;
+    }
+
+    function togglePassword(inputId, button) {
+        const input = document.getElementById(inputId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            button.textContent = '🙈';
+        } else {
+            input.type = 'password';
+            button.textContent = '👁';
+        }
+    }
+
+    function cleanDigits(input) {
+        input.value = input.value.replace(/\D/g, '').slice(0, 10);
+    }
+
+    function validatePassword(password) {
+        return typeof password === 'string' && password.length >= 4 && password.length <= 7;
+    }
+
+    function validateEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function validateName(name) {
+        return /^[A-Za-z]{3,7}$/.test(name);
+    }
+
+    function checkSupabase() {
+        if (!supabaseClient) {
+            alert('Please add SUPABASE_URL and SUPABASE_ANON_KEY in index.html first.');
+            return false;
+        }
+        return true;
+    }
+
+    function saveLoginSession(data) {
+        // Store only the application session token and basic display data.
+        // The actual balance is always retrieved from the database.
+        localStorage.setItem('crdgn_session_token', data.session_token);
+        localStorage.setItem('crdgn_user_id', data.user_id);
+        localStorage.setItem('crdgn_user_name', data.name);
+    }
+
+    // ============================================================
+    // LOGIN
+    // ============================================================
+
+    async function loginUser() {
+        if (!checkSupabase()) return;
+
+        const phone = document.getElementById('loginPhone').value.trim();
+        const password = document.getElementById('loginPassword').value;
+
+        if (!/^\d{10}$/.test(phone)) {
+            showMessage('loginMessage', 'Enter a valid 10-digit mobile number.');
+            return;
+        }
+
+        if (!validatePassword(password)) {
+            showMessage('loginMessage', 'Password must contain 4 to 7 characters.');
+            return;
+        }
+
+        setBusy('loginBtn', true, 'LOGGING IN...', 'LOGIN');
+        clearMessages();
+
+        try {
+            const { data, error } = await supabaseClient.rpc('crdgn_login', {
+                p_phone_no: phone,
+                p_password: password,
+                p_device_info: navigator.userAgent.slice(0, 500)
+            });
+
+            if (error) throw error;
+
+            const result = Array.isArray(data) ? data[0] : data;
+
+            if (!result || !result.success) {
+                showMessage('loginMessage', result?.message || 'Login failed.');
+                return;
+            }
+
+            saveLoginSession(result);
+            window.location.replace('homepage.html');
+
+        } catch (error) {
+            console.error('Login error:', error);
+            showMessage('loginMessage', 'Unable to login. Please try again.');
+        } finally {
+            setBusy('loginBtn', false, 'LOGGING IN...', 'LOGIN');
+        }
+    }
+
+    // ============================================================
+    // REGISTER
+    // ============================================================
+
+    async function registerUser() {
+        if (!checkSupabase()) return;
+
+        const name = document.getElementById('regName').value.trim().toUpperCase();
+        const phone = document.getElementById('regPhone').value.trim();
+        const dob = document.getElementById('regDob').value;
+        const email = document.getElementById('regEmail').value.trim().toLowerCase();
+        const password = document.getElementById('regPassword').value;
+        const confirm = document.getElementById('regConfirm').value;
+
+        if (!validateName(name)) {
+            showMessage('registerMessage', 'Name must contain 3 to 7 letters only.');
+            return;
+        }
+
+        if (!/^\d{10}$/.test(phone)) {
+            showMessage('registerMessage', 'Mobile number must contain exactly 10 digits.');
+            return;
+        }
+
+        if (!dob) {
+            showMessage('registerMessage', 'Please select your date of birth.');
+            return;
+        }
+
+        if (!validateEmail(email)) {
+            showMessage('registerMessage', 'Enter a valid email address.');
+            return;
+        }
+
+        if (!validatePassword(password)) {
+            showMessage('registerMessage', 'Password must contain 4 to 7 characters.');
+            return;
+        }
+
+        if (password !== confirm) {
+            showMessage('registerMessage', 'Passwords do not match.');
+            return;
+        }
+
+        setBusy('registerBtn', true, 'CREATING...', 'REGISTER');
+        clearMessages();
+
+        try {
+            const { data, error } = await supabaseClient.rpc('crdgn_register_user', {
+                p_phone_no: phone,
+                p_name: name,
+                p_dob: dob,
+                p_email: email,
+                p_password: password
+            });
+
+            if (error) throw error;
+
+            const result = Array.isArray(data) ? data[0] : data;
+
+            if (!result || !result.success) {
+                showMessage('registerMessage', result?.message || 'Registration failed.');
+                return;
+            }
+
+            showMessage(
+                'registerMessage',
+                'Registration successful! You can now login with your mobile number.',
+                'success'
+            );
+
+            document.getElementById('loginPhone').value = phone;
+            document.getElementById('loginPassword').value = '';
+
+            setTimeout(() => showScreen('loginScreen'), 1100);
+
+        } catch (error) {
+            console.error('Registration error:', error);
+            showMessage('registerMessage', 'Unable to register. Please try again.');
+        } finally {
+            setBusy('registerBtn', false, 'CREATING...', 'REGISTER');
+        }
+    }
+
+    // ============================================================
+    // FORGOT PASSWORD
+    // ============================================================
+
+    async function forgotPassword() {
+        if (!checkSupabase()) return;
+
+        const phone = document.getElementById('forgotPhone').value.trim();
+        const email = document.getElementById('forgotEmail').value.trim().toLowerCase();
+        const dob = document.getElementById('forgotDob').value;
+        const password = document.getElementById('forgotPassword').value;
+        const confirm = document.getElementById('forgotConfirm').value;
+
+        if (!/^\d{10}$/.test(phone)) {
+            showMessage('forgotMessage', 'Enter a valid 10-digit mobile number.');
+            return;
+        }
+
+        if (!validateEmail(email)) {
+            showMessage('forgotMessage', 'Enter a valid email address.');
+            return;
+        }
+
+        if (!dob) {
+            showMessage('forgotMessage', 'Please select your date of birth.');
+            return;
+        }
+
+        if (!validatePassword(password)) {
+            showMessage('forgotMessage', 'New password must contain 4 to 7 characters.');
+            return;
+        }
+
+        if (password !== confirm) {
+            showMessage('forgotMessage', 'Passwords do not match.');
+            return;
+        }
+
+        setBusy('forgotBtn', true, 'RESETTING...', 'RESET PASSWORD');
+        clearMessages();
+
+        try {
+            const { data, error } = await supabaseClient.rpc('crdgn_forgot_password', {
+                p_phone_no: phone,
+                p_email: email,
+                p_dob: dob,
+                p_new_password: password
+            });
+
+            if (error) throw error;
+
+            const result = Array.isArray(data) ? data[0] : data;
+
+            if (!result || !result.success) {
+                showMessage('forgotMessage', result?.message || 'Password reset failed.');
+                return;
+            }
+
+            showMessage(
+                'forgotMessage',
+                'Password reset successfully. Please login with your new password.',
+                'success'
+            );
+
+            setTimeout(() => {
+                document.getElementById('loginPhone').value = phone;
+                document.getElementById('loginPassword').value = '';
+                showScreen('loginScreen');
+            }, 1300);
+
+        } catch (error) {
+            console.error('Forgot password error:', error);
+            showMessage('forgotMessage', 'Unable to reset password. Please try again.');
+        } finally {
+            setBusy('forgotBtn', false, 'RESETTING...', 'RESET PASSWORD');
+        }
+    }
+
+    // ============================================================
+    // INPUT RESTRICTIONS
+    // ============================================================
+
+    ['loginPhone', 'regPhone', 'forgotPhone'].forEach(id => {
+        const input = document.getElementById(id);
+        input.addEventListener('input', () => cleanDigits(input));
+    });
+
+    // Enter key shortcuts
+    document.getElementById('loginPassword').addEventListener('keydown', e => {
+        if (e.key === 'Enter') loginUser();
+    });
+
+    // Prevent accidentally submitting through browser behavior.
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && document.activeElement?.tagName === 'INPUT') {
+            e.preventDefault();
+        }
+    });
+
+    // ============================================================
+    // IF A VALID SESSION ALREADY EXISTS, GO TO HOMEPAGE
+    // ============================================================
+
+    async function checkExistingSession() {
+        if (!supabaseClient) return;
+
+        const token = localStorage.getItem('crdgn_session_token');
+        if (!token) return;
+
+        try {
+            const { data, error } = await supabaseClient.rpc('crdgn_validate_session', {
+                p_session_token: token
+            });
+
+            if (error) throw error;
+
+            const result = Array.isArray(data) ? data[0] : data;
+
+            if (result && result.success) {
+                localStorage.setItem('crdgn_user_id', result.user_id);
+                localStorage.setItem('crdgn_user_name', result.name);
+                window.location.replace('homepage.html');
+            } else {
+                localStorage.removeItem('crdgn_session_token');
+                localStorage.removeItem('crdgn_user_id');
+                localStorage.removeItem('crdgn_user_name');
+            }
+        } catch (error) {
+            console.warn('Existing session check failed:', error);
+        }
+    }
+
+    checkExistingSession();
+</script>
+</body>
+</html>

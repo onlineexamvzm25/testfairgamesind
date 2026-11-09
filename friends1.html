@@ -1,0 +1,2029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1,user-scalable=no, viewport-fit=cover"
+  >
+  <meta name="theme-color" content="#000000">
+  <title>CRDG Rummy</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="history.css">
+
+<style>
+/* =========================================================
+   FRIENDS — JOIN + WAITING ROOM MOBILE LANDSCAPE
+   GAME SCREEN IS NOT TOUCHED
+========================================================= */
+
+@media screen and (orientation: landscape) and (max-height: 600px) {
+
+    /* =========================
+       WAITING ROOM
+    ========================= */
+
+    #lobbyScreen {
+        overflow: hidden;
+    }
+
+    #lobbyScreen .lobby-wrap {
+        width: min(600px, 90vw);
+        max-width: 600px;
+        padding: 6px 10px;
+        margin: 0 auto;
+
+        /* Two compact boxes side-by-side */
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas:
+            "title title"
+            "table joinedTitle"
+            "table joined"
+            "count count"
+            "host host"
+            "guest guest";
+        gap: 3px 6px;
+        align-items: start;
+    }
+
+    #lobbyScreen .lobby-wrap > h2 {
+        grid-area: title;
+        font-size: 16px;
+        line-height: 1;
+        margin: 1px 0 3px;
+        text-align: center;
+    }
+
+    /* LEFT BOX — TABLE ID */
+    #lobbyScreen .friend-table-id-box {
+        grid-area: table;
+        height: 64px;
+        min-height: 64px;
+        box-sizing: border-box;
+        padding: 4px 7px;
+        margin: 0;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+    }
+
+    #lobbyScreen .friend-table-id-title {
+        font-size: 8px;
+        margin-bottom: 0;
+    }
+
+    #lobbyScreen .friend-table-id {
+        font-size: 20px;
+        line-height: 1;
+        margin: 1px 0 2px;
+        letter-spacing: 2px;
+    }
+
+    #lobbyScreen .friend-share-message {
+        font-size: 8px;
+        line-height: 1.0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    #lobbyScreen .friend-share-submessage {
+        display: none;
+    }
+
+    /* RIGHT BOX TITLE */
+    #lobbyScreen .lobby-wrap > h3 {
+        grid-area: joinedTitle;
+        height: 14px;
+        margin: 0;
+        padding: 0;
+        font-size: 10px;
+        line-height: 14px;
+        text-align: center;
+        border: 1px solid rgba(255,255,255,.15);
+        border-bottom: 0;
+        border-radius: 9px 9px 0 0;
+        box-sizing: border-box;
+    }
+
+    /* RIGHT BOX — SIX PLAYER POSITIONS */
+    #lobbyScreen .lobby-player-list {
+        grid-area: joined;
+        height: 50px;
+        min-height: 50px;
+        box-sizing: border-box;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: repeat(3, 1fr);
+        gap: 0 8px;
+        padding: 2px 6px;
+        margin: 0;
+        border: 1px solid rgba(255,255,255,.15);
+        border-top: 0;
+        border-radius: 0 0 9px 9px;
+    }
+
+    #lobbyScreen .lobby-player-list > div {
+        min-width: 0;
+        height: 16px;
+        min-height: 16px;
+        padding: 1px 3px;
+        font-size: 8px;
+        line-height: 15px;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* The existing lobby card is kept for JS compatibility,
+       but only the Joined Players count is shown. */
+    #lobbyScreen .lobby-card {
+        grid-area: count;
+        height: 20px;
+        min-height: 20px;
+        box-sizing: border-box;
+        padding: 0 8px;
+        margin: 0;
+        font-size: 10px;
+        line-height: 20px;
+        text-align: center;
+    }
+
+    #lobbyScreen .lobby-card > div:first-child {
+        display: none;
+    }
+
+    #lobbyScreen .lobby-card > div:last-child {
+        width: 100%;
+    }
+
+    #lobbyScreen .host-start-area,
+    #lobbyScreen .guest-waiting-message {
+        padding: 2px 5px;
+        margin: 0;
+        box-sizing: border-box;
+        text-align: center;
+    }
+
+    #lobbyScreen .host-start-area {
+        grid-area: host;
+    }
+
+    #lobbyScreen .guest-waiting-message {
+        grid-area: guest;
+    }
+
+    #lobbyScreen .host-start-message,
+    #lobbyScreen .guest-waiting-message {
+        font-size: 8px;
+        line-height: 1.0;
+    }
+
+    #lobbyScreen .start-game-button {
+        width: 100%;
+        height: 27px;
+        min-height: 27px;
+        padding: 4px 8px;
+        font-size: 10px;
+    }
+}
+
+
+/* =========================================================
+   FRIENDS — SMALL PORTRAIT DEVICES
+   Only JOIN / WAITING screens show the rotate message.
+   Game screen remains controlled by its existing layout.
+========================================================= */
+
+#friendsRotateOverlay {
+    display: none;
+}
+
+@media screen and (orientation: portrait) and (max-width: 900px) {
+
+    #friendsRotateOverlay {
+        display: flex;
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        align-items: center;
+        justify-content: center;
+        background: #000;
+        color: #fff;
+        z-index: 999999;
+        text-align: center;
+    }
+
+    #friendsRotateOverlay .rotate-message {
+        font-size: 22px;
+        font-weight: 800;
+        padding: 20px;
+    }
+
+    #friendsRotateOverlay .rotate-icon {
+        font-size: 48px;
+        margin-bottom: 12px;
+    }
+
+    #friendsRotateOverlay small {
+        display: block;
+        margin-top: 8px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+}
+
+
+/* =========================================================
+   GAME CONNECTION STATUS
+   Small status indicator beside DECLARE / DROP.
+========================================================= */
+.connection-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 28px;
+    height: 42px;
+    margin-left: 4px;
+    white-space: nowrap;
+    pointer-events: none;
+    font-weight: 900;
+}
+
+.connection-wifi-icon {
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.connection-wifi-icon svg {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.connection-status.online {
+    color: #20d46b;
+}
+
+.connection-status.offline {
+    color: #ff334f;
+}
+
+.connection-offline-text {
+    display: none;
+    font-size: 13px;
+    letter-spacing: .7px;
+}
+
+.connection-status.offline .connection-offline-text {
+    display: inline-block;
+    animation: connectionOfflineBlink .85s ease-in-out infinite;
+}
+
+@keyframes connectionOfflineBlink {
+    0%, 100% { opacity: 1; transform: translateX(0); }
+    50% { opacity: .28; transform: translateX(1px); }
+}
+
+.connection-status.offline .connection-wifi-icon {
+    animation: connectionWifiPulse .9s ease-in-out infinite;
+}
+
+@keyframes connectionWifiPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: .45; transform: scale(.92); }
+}
+
+@media screen and (max-width: 700px) {
+    .connection-status {
+        gap: 3px;
+        min-width: 24px;
+        height: 38px;
+        margin-left: 2px;
+    }
+
+    .connection-wifi-icon,
+    .connection-wifi-icon svg {
+        width: 21px;
+        height: 21px;
+    }
+
+    .connection-offline-text {
+        font-size: 10px;
+        letter-spacing: .4px;
+    }
+}
+</style>
+
+
+
+
+<style id="friends-compact-final">
+/* =========================================================
+   FINAL FRIENDS JOIN + WAITING ROOM COMPACT OVERRIDE
+   Scoped ONLY to Join / Waiting screens.
+   GAME SCREEN IS NOT TOUCHED.
+========================================================= */
+@media screen and (orientation: landscape) and (max-width: 1100px) {
+
+    /* ---------- JOIN SCREEN ---------- */
+    #joinScreen {
+        overflow: hidden !important;
+    }
+
+    #joinScreen .auth-card {
+        width: min(430px, 54vw) !important;
+        max-width: 430px !important;
+        padding: 11px 14px 12px !important;
+        gap: 5px !important;
+        border-radius: 14px !important;
+    }
+
+    #joinScreen .auth-card h2 {
+        margin: 0 0 3px !important;
+        font-size: 18px !important;
+        line-height: 1 !important;
+    }
+
+    #joinScreen .auth-card input {
+        width: 100% !important;
+        height: 29px !important;
+        min-height: 29px !important;
+        padding: 4px 8px !important;
+        border-radius: 8px !important;
+        font-size: 11px !important;
+    }
+
+    #joinScreen .auth-card button {
+        width: 100% !important;
+        height: 33px !important;
+        min-height: 33px !important;
+        margin-top: 2px !important;
+        padding: 4px 10px !important;
+        border-radius: 17px !important;
+        font-size: 12px !important;
+    }
+
+    /* ---------- WAITING ROOM ---------- */
+    #lobbyScreen {
+        overflow: hidden !important;
+    }
+
+    #lobbyScreen .lobby-wrap {
+        width: min(620px, 92vw) !important;
+        max-width: 620px !important;
+        padding: 3px 8px !important;
+        margin: 0 auto !important;
+
+        display: grid !important;
+        grid-template-columns: minmax(0,1fr) minmax(0,1fr) !important;
+        grid-template-areas:
+            "title title"
+            "table joinedTitle"
+            "table joined"
+            "count count"
+            "host host"
+            "guest guest" !important;
+        gap: 3px 6px !important;
+        align-items: start !important;
+    }
+
+    #lobbyScreen .lobby-wrap > h2 {
+        grid-area: title !important;
+        margin: 0 0 2px !important;
+        font-size: 17px !important;
+        line-height: 18px !important;
+        font-weight: 900 !important;
+    }
+
+    /* LEFT: TABLE ID */
+    #lobbyScreen .friend-table-id-box {
+        grid-area: table !important;
+        height: 54px !important;
+        min-height: 54px !important;
+        max-height: 54px !important;
+        margin: 0 !important;
+        padding: 2px 5px !important;
+        border-width: 1px !important;
+        border-radius: 7px !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        overflow: hidden !important;
+    }
+
+    #lobbyScreen .friend-table-id-title {
+        margin: 0 !important;
+        font-size: 8px !important;
+        line-height: 8px !important;
+    }
+
+    #lobbyScreen .friend-table-id {
+        margin: 1px 0 !important;
+        font-size: 21px !important;
+        line-height: 21px !important;
+        letter-spacing: 2px !important;
+    }
+
+    #lobbyScreen .friend-share-message {
+        margin: 0 !important;
+        font-size: 7px !important;
+        line-height: 7px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    #lobbyScreen .friend-share-submessage {
+        display: none !important;
+    }
+
+    /* RIGHT: ONE VISUAL JOINED-PLAYERS BOX */
+    #lobbyScreen .lobby-wrap > h3 {
+        grid-area: joinedTitle !important;
+        height: 12px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 1px solid rgba(255,255,255,.20) !important;
+        border-bottom: 0 !important;
+        border-radius: 7px 7px 0 0 !important;
+        box-sizing: border-box !important;
+        font-size: 8px !important;
+        line-height: 11px !important;
+        font-weight: 900 !important;
+    }
+
+    #lobbyScreen .lobby-player-list {
+        grid-area: joined !important;
+        height: 42px !important;
+        min-height: 42px !important;
+        max-height: 42px !important;
+        margin: 0 !important;
+        padding: 1px 5px !important;
+        gap: 0 5px !important;
+        border: 1px solid rgba(255,255,255,.20) !important;
+        border-top: 0 !important;
+        border-radius: 0 0 7px 7px !important;
+        box-sizing: border-box !important;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        grid-template-rows: repeat(3, 1fr) !important;
+    }
+
+    #lobbyScreen .lobby-player-list > div {
+        height: 13px !important;
+        min-height: 13px !important;
+        padding: 0 2px !important;
+        font-size: 12px !important;
+        line-height: 17px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    /* PLAYER COUNT BOX — keep only count visible */
+    #lobbyScreen .lobby-card {
+        grid-area: count !important;
+        height: 19px !important;
+        min-height: 19px !important;
+        max-height: 19px !important;
+        margin: 0 !important;
+        padding: 0 6px !important;
+        border-radius: 7px !important;
+        font-size: 9px !important;
+        line-height: 19px !important;
+        box-sizing: border-box !important;
+    }
+
+    #lobbyScreen .lobby-card > div:first-child {
+        display: none !important;
+    }
+
+    #lobbyScreen .lobby-card > div:last-child {
+        width: 100% !important;
+    }
+
+    /* HOST / GUEST */
+    #lobbyScreen .host-start-area,
+    #lobbyScreen .guest-waiting-message {
+        padding: 1px 4px !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+        text-align: center !important;
+    }
+
+    #lobbyScreen .host-start-area {
+        grid-area: host !important;
+    }
+
+    #lobbyScreen .guest-waiting-message {
+        grid-area: guest !important;
+    }
+
+    #lobbyScreen .host-start-message,
+    #lobbyScreen .guest-waiting-message {
+        font-size: 8px !important;
+        line-height: 9px !important;
+    }
+
+    #lobbyScreen .start-game-button {
+        width: 100% !important;
+        height: 29px !important;
+        min-height: 29px !important;
+        padding: 3px 7px !important;
+        font-size: 10px !important;
+    }
+}
+</style>
+
+
+<style id="FRIENDS_FORCE_LAYOUT_FINAL">
+/* =========================================================
+   FINAL DIRECT INLINE WAITING-ROOM / JOIN OVERRIDE
+   This block is intentionally inside friends.html so it
+   does NOT depend on external CSS version/cache behavior.
+   Game screen is not touched.
+========================================================= */
+@media screen and (orientation: landscape) {
+
+  /* =========================
+     JOIN SCREEN
+  ========================= */
+  #joinScreen {
+    overflow: hidden !important;
+  }
+
+  #joinScreen .auth-card {
+    width: min(420px, 54vw) !important;
+    max-width: 420px !important;
+    padding: 14px 16px 15px !important;
+    gap: 7px !important;
+    border-radius: 16px !important;
+    box-sizing: border-box !important;
+  }
+
+  #joinScreen .auth-card h2 {
+    margin: 0 0 4px !important;
+    font-size: 21px !important;
+    line-height: 22px !important;
+    font-weight: 900 !important;
+  }
+
+  #joinScreen .auth-card input {
+    width: 100% !important;
+    height: 37px !important;
+    min-height: 37px !important;
+    padding: 6px 10px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    border-radius: 9px !important;
+    box-sizing: border-box !important;
+  }
+
+  #joinScreen .auth-card button {
+    width: 100% !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    margin-top: 3px !important;
+    padding: 5px 10px !important;
+    font-size: 14px !important;
+    font-weight: 900 !important;
+    border-radius: 21px !important;
+  }
+
+  /* =========================
+     WAITING ROOM
+  ========================= */
+  #lobbyScreen {
+    overflow: hidden !important;
+  }
+
+  #lobbyScreen .lobby-wrap {
+    width: min(780px, 94vw) !important;
+    max-width: 780px !important;
+    padding: 5px 8px !important;
+    margin: 0 auto !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    grid-template-rows: auto 22px 74px 28px auto auto !important;
+    grid-template-areas:
+      "title title"
+      "table joinedTitle"
+      "table joined"
+      "count count"
+      "host host"
+      "guest guest" !important;
+    gap: 4px 8px !important;
+    align-items: start !important;
+    box-sizing: border-box !important;
+  }
+
+  #lobbyScreen .lobby-wrap > h2 {
+    grid-area: title !important;
+    margin: 0 0 3px !important;
+    font-size: 24px !important;
+    line-height: 26px !important;
+    font-weight: 900 !important;
+  }
+
+  /* LEFT: TABLE ID */
+  #lobbyScreen .friend-table-id-box {
+    grid-area: table !important;
+    width: 100% !important;
+    height: 100px !important;
+    min-height: 100px !important;
+    max-height: 100px !important;
+    margin: 0 !important;
+    padding: 5px 8px !important;
+    border-width: 2px !important;
+    border-radius: 10px !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    overflow: hidden !important;
+  }
+
+  #lobbyScreen .friend-table-id-title {
+    margin: 0 !important;
+    font-size: 11px !important;
+    line-height: 12px !important;
+    font-weight: 900 !important;
+  }
+
+  #lobbyScreen .friend-table-id {
+    margin: 2px 0 4px !important;
+    font-size: 32px !important;
+    line-height: 32px !important;
+    letter-spacing: 4px !important;
+    font-weight: 900 !important;
+  }
+
+  #lobbyScreen .friend-share-message {
+    margin: 0 !important;
+    font-size: 11px !important;
+    line-height: 12px !important;
+    font-weight: 900 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+  }
+
+  #lobbyScreen .friend-share-submessage {
+    display: block !important;
+    margin-top: 2px !important;
+    font-size: 9px !important;
+    line-height: 10px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+  }
+
+  /* RIGHT: JOINED PLAYERS */
+  #lobbyScreen .lobby-wrap > h3 {
+    grid-area: joinedTitle !important;
+    width: 100% !important;
+    height: 22px !important;
+    min-height: 22px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 1px solid rgba(255,255,255,.20) !important;
+    border-bottom: 0 !important;
+    border-radius: 9px 9px 0 0 !important;
+    box-sizing: border-box !important;
+    font-size: 13px !important;
+    line-height: 21px !important;
+    font-weight: 900 !important;
+    text-align: center !important;
+  }
+
+  #lobbyScreen .lobby-player-list {
+    grid-area: joined !important;
+    width: 100% !important;
+    height: 74px !important;
+    min-height: 74px !important;
+    max-height: 74px !important;
+    margin: 0 !important;
+    padding: 4px 8px !important;
+    gap: 0 12px !important;
+    border: 1px solid rgba(255,255,255,.20) !important;
+    border-top: 0 !important;
+    border-radius: 0 0 9px 9px !important;
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    grid-template-rows: repeat(3, 1fr) !important;
+    align-items: center !important;
+    overflow: hidden !important;
+  }
+
+  #lobbyScreen .lobby-player-list > div {
+    width: 100% !important;
+    height: 20px !important;
+    min-height: 20px !important;
+    padding: 1px 3px !important;
+    font-size: 12px !important;
+    line-height: 18px !important;
+    font-weight: 700 !important;
+    text-align: left !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    box-sizing: border-box !important;
+  }
+
+  /* PLAYER COUNT */
+  #lobbyScreen .lobby-card {
+    grid-area: count !important;
+    width: 100% !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    max-height: 28px !important;
+    margin: 0 !important;
+    padding: 0 8px !important;
+    border-radius: 8px !important;
+    font-size: 12px !important;
+    line-height: 28px !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+  }
+
+  #lobbyScreen .lobby-card > div:first-child {
+    display: none !important;
+  }
+
+  #lobbyScreen .lobby-card > div:last-child {
+    width: 100% !important;
+  }
+
+  /* WAITING / START */
+  #lobbyScreen .host-start-area,
+  #lobbyScreen .guest-waiting-message {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 1px 5px !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+  }
+
+  #lobbyScreen .host-start-area {
+    grid-area: host !important;
+  }
+
+  #lobbyScreen .guest-waiting-message {
+    grid-area: guest !important;
+  }
+
+  #lobbyScreen .host-start-message,
+  #lobbyScreen .guest-waiting-message {
+    font-size: 13px !important;
+    line-height: 15px !important;
+    font-weight: 800 !important;
+  }
+
+  #lobbyScreen .start-game-button {
+    width: 100% !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    margin: 0 !important;
+    padding: 4px 10px !important;
+    font-size: 14px !important;
+    font-weight: 900 !important;
+    border-radius: 9px !important;
+  }
+}
+</style>
+
+
+<style id="COMMON_RUMMY_LANDSCAPE_SYSTEM">
+/* ==========================================================
+   COMMON RUMMY LANDSCAPE SCREEN SYSTEM
+   Based on the Solo Join screen visual reference.
+   Only JOIN + WAITING screens are affected.
+   GAME SCREEN / JS PROCESS ARE NOT CHANGED.
+   ========================================================== */
+
+@media screen and (orientation: landscape) {
+
+  /* ========================================================
+     SHARED BACKGROUND
+     ======================================================== */
+  #joinScreen.join-screen,
+  #lobbyScreen.lobby-screen {
+    overflow: hidden !important;
+    background:
+      radial-gradient(circle at 50% 18%, rgba(34,197,94,.16), transparent 30%),
+      radial-gradient(circle at 20% 85%, rgba(59,130,246,.13), transparent 28%),
+      linear-gradient(135deg, #06140f 0%, #081d18 48%, #03100c 100%) !important;
+  }
+
+  /* ========================================================
+     FRIENDS JOIN — SAME OUTER BOX LANGUAGE AS SOLO
+     ======================================================== */
+  #joinScreen .auth-card {
+    position: relative !important;
+    width: min(420px, 56vw) !important;
+    max-width: 420px !important;
+    padding: 16px 18px 17px !important;
+    gap: 8px !important;
+    box-sizing: border-box !important;
+
+    border: 1px solid rgba(255,255,255,.16) !important;
+    border-radius: 18px !important;
+
+    background:
+      linear-gradient(
+        145deg,
+        rgba(255,255,255,.105),
+        rgba(255,255,255,.035)
+      ) !important;
+
+    box-shadow:
+      0 24px 70px rgba(0,0,0,.55),
+      inset 0 1px 0 rgba(255,255,255,.10) !important;
+
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+  }
+
+  #joinScreen .friends-join-heading {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 30px;
+  }
+
+  #joinScreen .friends-join-heading h2 {
+    margin: 0 !important;
+    padding: 0 34px !important;
+    font-size: 21px !important;
+    line-height: 22px !important;
+    font-weight: 900 !important;
+    text-align: center !important;
+    color: #fff !important;
+  }
+
+  #joinScreen .friends-join-back {
+    position: absolute !important;
+    left: 0 !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 30px !important;
+    height: 30px !important;
+    min-height: 30px !important;
+    padding: 0 !important;
+    border: 1px solid rgba(255,255,255,.18) !important;
+    border-radius: 50% !important;
+    background: rgba(0,0,0,.25) !important;
+    color: #fff !important;
+    font-size: 20px !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+  }
+
+  #joinScreen .friends-join-field {
+    display: grid;
+    grid-template-columns: 78px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  #joinScreen .friends-join-field label {
+    margin: 0 !important;
+    color: rgba(255,255,255,.78) !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  #joinScreen .friends-join-field input {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 37px !important;
+    min-height: 37px !important;
+    padding: 6px 10px !important;
+    border: 1px solid rgba(255,255,255,.18) !important;
+    border-radius: 9px !important;
+    outline: none !important;
+    background: rgba(0,0,0,.28) !important;
+    color: #fff !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    box-sizing: border-box !important;
+  }
+
+  #joinScreen .auth-card > button {
+    width: 100% !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    margin-top: 3px !important;
+    border-radius: 21px !important;
+    border: 1px solid rgba(255,255,255,.18) !important;
+    background: linear-gradient(135deg, #d8b84f, #f1d66f) !important;
+    color: #18200e !important;
+    font-size: 14px !important;
+    font-weight: 900 !important;
+    box-shadow: 0 10px 24px rgba(0,0,0,.28) !important;
+  }
+
+  /* ========================================================
+     WAITING ROOM — ONE COMMON OUTER BOX
+     ======================================================== */
+  #lobbyScreen .lobby-wrap {
+    width: min(720px, 90vw) !important;
+    max-width: 720px !important;
+    margin: 0 auto !important;
+    padding: 16px 18px 18px !important;
+    box-sizing: border-box !important;
+
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr) !important;
+    grid-template-areas:
+      "title title"
+      "table joinedTitle"
+      "table joined"
+      "count count"
+      "host host"
+      "guest guest" !important;
+    gap: 7px 10px !important;
+    align-items: start !important;
+
+    border: 1px solid rgba(255,255,255,.16) !important;
+    border-radius: 18px !important;
+
+    background:
+      linear-gradient(
+        145deg,
+        rgba(255,255,255,.105),
+        rgba(255,255,255,.035)
+      ) !important;
+
+    box-shadow:
+      0 24px 70px rgba(0,0,0,.55),
+      inset 0 1px 0 rgba(255,255,255,.10) !important;
+
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+  }
+
+  #lobbyScreen .lobby-wrap > h2 {
+    grid-area: title !important;
+    margin: 0 0 4px !important;
+    font-size: 22px !important;
+    line-height: 24px !important;
+    font-weight: 900 !important;
+    text-align: center !important;
+  }
+
+  /* Left inner section */
+  #lobbyScreen .friend-table-id-box {
+    grid-area: table !important;
+    height: 88px !important;
+    min-height: 88px !important;
+    max-height: 88px !important;
+    margin: 0 !important;
+    padding: 7px 9px !important;
+    box-sizing: border-box !important;
+    border: 1px solid #00a86b !important;
+    border-radius: 12px !important;
+    background: rgba(24,36,45,.78) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    text-align: center !important;
+    overflow: hidden !important;
+  }
+
+  #lobbyScreen .friend-table-id-title {
+    margin: 0 !important;
+    font-size: 11px !important;
+    line-height: 12px !important;
+    font-weight: 900 !important;
+  }
+
+  #lobbyScreen .friend-table-id {
+    margin: 2px 0 4px !important;
+    font-size: 31px !important;
+    line-height: 31px !important;
+    letter-spacing: 4px !important;
+    font-weight: 900 !important;
+  }
+
+  #lobbyScreen .friend-share-message {
+    margin: 0 !important;
+    font-size: 10px !important;
+    line-height: 11px !important;
+    font-weight: 900 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  #lobbyScreen .friend-share-submessage {
+    display: none !important;
+  }
+
+  /* Right inner section */
+  #lobbyScreen .lobby-wrap > h3 {
+    grid-area: joinedTitle !important;
+    height: 18px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    border: 1px solid rgba(255,255,255,.18) !important;
+    border-bottom: 0 !important;
+    border-radius: 12px 12px 0 0 !important;
+    background: rgba(0,0,0,.17) !important;
+    font-size: 11px !important;
+    line-height: 17px !important;
+    font-weight: 900 !important;
+    text-align: center !important;
+  }
+
+  #lobbyScreen .lobby-player-list {
+    grid-area: joined !important;
+    height: 70px !important;
+    min-height: 70px !important;
+    max-height: 70px !important;
+    margin: 0 !important;
+    padding: 5px 8px !important;
+    gap: 1px 10px !important;
+    box-sizing: border-box !important;
+    border: 1px solid rgba(255,255,255,.18) !important;
+    border-top: 0 !important;
+    border-radius: 0 0 12px 12px !important;
+    background: rgba(0,0,0,.17) !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    grid-template-rows: repeat(3, 1fr) !important;
+  }
+
+  #lobbyScreen .lobby-player-list > div {
+    height: 18px !important;
+    min-height: 18px !important;
+    padding: 0 3px !important;
+    font-size: 10px !important;
+    line-height: 18px !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* Count */
+  #lobbyScreen .lobby-card {
+    grid-area: count !important;
+    height: 24px !important;
+    min-height: 24px !important;
+    max-height: 24px !important;
+    margin: 0 !important;
+    padding: 0 8px !important;
+    box-sizing: border-box !important;
+    border: 1px solid rgba(255,255,255,.16) !important;
+    border-radius: 10px !important;
+    background: rgba(0,0,0,.17) !important;
+    font-size: 11px !important;
+    line-height: 22px !important;
+    text-align: center !important;
+  }
+
+  #lobbyScreen .lobby-card > div:first-child {
+    display: none !important;
+  }
+
+  #lobbyScreen .lobby-card > div:last-child {
+    width: 100% !important;
+  }
+
+  /* Waiting / start */
+  #lobbyScreen .host-start-area,
+  #lobbyScreen .guest-waiting-message {
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: center !important;
+  }
+
+  #lobbyScreen .host-start-message,
+  #lobbyScreen .guest-waiting-message {
+    font-size: 11px !important;
+    line-height: 14px !important;
+    font-weight: 800 !important;
+  }
+
+  #lobbyScreen .start-game-button {
+    width: 100% !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 5px 10px !important;
+    border-radius: 19px !important;
+    font-size: 13px !important;
+    font-weight: 900 !important;
+  }
+}
+
+/* Short landscape phones */
+@media screen and (orientation: landscape) and (max-height: 430px) {
+
+  #joinScreen .auth-card {
+    width: min(390px, 55vw) !important;
+    padding: 12px 14px 13px !important;
+  }
+
+  #joinScreen .friends-join-heading h2 {
+    font-size: 18px !important;
+  }
+
+  #joinScreen .friends-join-field input {
+    height: 32px !important;
+    min-height: 32px !important;
+    font-size: 12px !important;
+  }
+
+  #joinScreen .auth-card > button {
+    height: 37px !important;
+    min-height: 37px !important;
+    font-size: 13px !important;
+  }
+
+  #lobbyScreen .lobby-wrap {
+    width: min(680px, 92vw) !important;
+    padding: 12px 14px 14px !important;
+    gap: 5px 8px !important;
+  }
+
+  #lobbyScreen .lobby-wrap > h2 {
+    font-size: 19px !important;
+    line-height: 20px !important;
+  }
+
+  #lobbyScreen .friend-table-id-box {
+    height: 76px !important;
+    min-height: 76px !important;
+    max-height: 76px !important;
+  }
+
+  #lobbyScreen .friend-table-id {
+    font-size: 27px !important;
+    line-height: 27px !important;
+  }
+
+  #lobbyScreen .lobby-player-list {
+    height: 60px !important;
+    min-height: 60px !important;
+    max-height: 60px !important;
+  }
+
+  #lobbyScreen .lobby-player-list > div {
+    height: 16px !important;
+    min-height: 16px !important;
+    line-height: 16px !important;
+    font-size: 9px !important;
+  }
+
+  #lobbyScreen .lobby-card {
+    height: 22px !important;
+    min-height: 22px !important;
+  }
+
+  #lobbyScreen .start-game-button {
+    height: 34px !important;
+    min-height: 34px !important;
+    font-size: 12px !important;
+  }
+}
+</style>
+
+</head>
+
+<body>
+
+  <!-- MOBILE LANDSCAPE NOTICE -->
+  <div id="friendsRotateOverlay">
+    <div class="rotate-message">
+      <div class="rotate-icon">📱↔️</div>
+      Please rotate your device
+      <small>Landscape mode is required</small>
+    </div>
+  </div>
+
+
+  <!-- JOIN SCREEN -->
+  <section id="joinScreen" class="join-screen screen-layer">
+    <div class="auth-card">
+      <div class="friends-join-heading">
+        <button
+          type="button"
+          class="friends-join-back"
+          onclick="location.href='index.html'"
+          aria-label="Back to homepage"
+          title="Back to homepage"
+        >←</button>
+        <h2>🎮 Join Rummy Table</h2>
+      </div>
+
+      <div class="friends-join-field">
+        <label for="tableIdInput">Table No :</label>
+        <input
+          id="tableIdInput"
+          type="number"
+          inputmode="numeric"
+          placeholder="Table ID"
+          value="777777"
+        >
+      </div>
+
+      <div class="friends-join-field">
+        <label for="password">Password :</label>
+        <input
+          id="password"
+          type="password"
+          placeholder="Password"
+        >
+      </div>
+
+      <div class="friends-join-field">
+        <label for="nickname">Name :</label>
+        <input
+          id="nickname"
+          type="text"
+          placeholder="DISPLAY NAME"
+          autocomplete="nickname"
+          maxlength="15"
+          title="Remember this exact name for reconnect the Game"
+          oninput="this.value = this.value.toUpperCase()"
+        >
+      </div>
+
+      <button type="button" onclick="joinTable()">Join Game</button>
+    </div>
+  </section>
+
+  <!-- LOBBY SCREEN -->
+<section id="lobbyScreen" class="lobby-screen screen-layer hidden">
+
+    <div class="lobby-wrap">
+
+        <h2>🎮 Waiting Room</h2>
+
+
+        <!-- ======================================
+             TABLE ID
+             ====================================== -->
+
+        <div class="friend-table-id-box">
+
+            <div class="friend-table-id-title">
+                TABLE ID
+            </div>
+
+            <div
+                id="lobbyTableId"
+                class="friend-table-id"
+            >
+                ------
+            </div>
+
+            <div class="friend-share-message">
+                📢 SHARE THIS TABLE ID WITH YOUR FRIENDS
+            </div>
+
+            <div class="friend-share-submessage">
+                Ask your friends to enter this Table ID
+                and join your table.
+            </div>
+
+        </div>
+
+
+        <!-- ======================================
+             LOBBY INFORMATION
+             ====================================== -->
+
+        <div class="lobby-card">
+
+            <div>
+                Your Seat:
+                <span id="lobbySeat">-</span>
+            </div>
+
+            <div>
+                Players:
+                <span id="lobbyPlayers">0</span>/6
+            </div>
+
+        </div>
+
+
+        <!-- ======================================
+             HOST START GAME AREA
+             ====================================== -->
+
+        <div
+            id="hostStartArea"
+            class="host-start-area"
+            style="display:none;"
+        >
+
+            <div
+                id="hostStartMessage"
+                class="host-start-message"
+            >
+                Waiting for at least 2 players...
+            </div>
+
+            <button
+                id="btnStartGame"
+                type="button"
+                class="start-game-button"
+                onclick="hostStartGame()"
+            >
+                ▶ START GAME
+            </button>
+
+        </div>
+
+
+        <!-- ======================================
+             NON-HOST MESSAGE
+             ====================================== -->
+
+        <div
+            id="guestWaitingMessage"
+            class="guest-waiting-message"
+            style="display:none;"
+        >
+            ⏳ Waiting for the host to start the game...
+        </div>
+
+
+        <!-- ======================================
+             JOINED PLAYERS
+             ====================================== -->
+
+        <h3>Joined Players</h3>
+
+        <div
+            id="lobbyPlayerList"
+            class="lobby-player-list"
+        >
+
+            <div id="seat1">
+                Seat 1: Empty
+            </div>
+
+            <div id="seat2">
+                Seat 2: Empty
+            </div>
+
+            <div id="seat3">
+                Seat 3: Empty
+            </div>
+
+            <div id="seat4">
+                Seat 4: Empty
+            </div>
+
+            <div id="seat5">
+                Seat 5: Empty
+            </div>
+
+            <div id="seat6">
+                Seat 6: Empty
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+  <!-- GAME SCREEN -->
+  <div id="app" class="game-viewport hidden">
+    <div id="gameStage" class="game-stage">
+
+     <header class="topbar">
+
+        <div class="topbar-section">
+            TABLE
+            <span id="tableIdDisplay">-</span>
+            <span class="player-count">(P <span id="topPlayerCount">0</span>)</span>
+        </div>
+
+        <div class="topbar-section">
+            <span id="topGameType">201 POOL</span>
+        </div>
+
+        <div class="topbar-section">
+            POT :<span id="topPot">0</span>
+        </div>
+
+        <div class="topbar-section topbar-turn">
+            TURN: <span id="currentTurnPlayer">-</span>
+        </div>
+
+        <div class="topbar-section topbar-timer">
+            ⏱ <span id="turnTimer">40</span>
+        </div>
+
+        <div class="topbar-section topbar-history">
+            <button
+                id="btnHistory"
+                class="topbar-history-button"
+                type="button"
+                title="View game history"
+                aria-label="View game history">
+                HISTORY
+            </button>
+
+          <button
+              id="btnGameRefresh"
+              type="button"
+              onclick="refreshGame()"
+              title="Reconnect and refresh game">
+              ↻
+          </button>
+        </div>
+
+        </header>
+
+      <main class="table">
+        <section id="opponents" class="opponents" aria-label="Opponents">
+          <div id="opp1" class="opponent-seat"></div>
+          <div id="opp2" class="opponent-seat"></div>
+          <div id="opp3" class="opponent-seat"></div>
+          <div id="opp4" class="opponent-seat"></div>
+          <div id="opp5" class="opponent-seat"></div>
+        </section>
+
+        <section class="center">
+
+        <div class="table-piles">
+
+            <!-- OPEN CARD -->
+
+            <div class="open-area">
+
+
+                            
+                <button
+                    id="openPileHistoryBtn"
+                    class="open-history-btn"
+                    onclick="showOpenPileHistory(event)"
+                    title="View discarded cards"
+                >
+                    ≡≡≡
+                </button>
+
+                <div
+                    id="openVisual"
+                    class="table-card clickable-pile"
+                    draggable="true">
+                    -
+                </div>
+
+                
+
+
+            </div>
+
+            <!-- JOKER + STOCK -->
+
+            <div class="stock-area">
+
+                <div
+                    id="jokerVisual"
+                    class="table-card joker-card">
+                    -
+                </div>
+
+                <div
+                    id="stockCard"
+                    class="card-back clickable-pile">
+                </div>
+
+            </div>
+
+            <!-- DECLARE BUTTON -->
+
+            <button
+                id="btnDeclare"
+                class="table-action-button declare-button"
+                type="button"
+                onclick="declareGame()">
+                Declare
+            </button>
+
+            <!-- DROP BUTTON -->
+
+            <button
+                id="dropBtn"
+                class="table-action-button drop-button"
+                type="button"
+                onclick="dropCurrentDeal()">
+                DROP
+            </button>
+
+            <!-- CONNECTION STATUS -->
+            <div
+                id="connectionStatus"
+                class="connection-status online"
+                title="Connected">
+
+                <span
+                    id="connectionWifiIcon"
+                    class="connection-wifi-icon"
+                    aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M2.5 8.8a16.8 16.8 0 0 1 19 0" />
+                        <path d="M5.8 12.5a11.4 11.4 0 0 1 12.4 0" />
+                        <path d="M9.1 16.1a6.1 6.1 0 0 1 5.8 0" />
+                        <circle cx="12" cy="20" r="1.25" />
+                    </svg>
+                </span>
+
+                <span
+                    id="connectionOfflineText"
+                    class="connection-offline-text">
+                    OFFLINE
+                </span>
+            </div>
+            <button
+                id="btnVoiceMic"
+                type="button"
+                title="Microphone is off"
+                aria-label="Turn microphone on"
+                aria-pressed="false"
+                style="
+                    width:30px;
+                    height:30px;
+                    padding:3px;
+                    margin-left:5px;
+                    border:1px solid rgba(255,255,255,0.4);
+                    border-radius:50%;
+                    background:#444;
+                    color:white;
+                    font-size:17px;
+                    cursor:pointer;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                ">
+                🎙
+            </button>
+            <button
+                id="btnVoiceSpeaker"
+                type="button"
+                title="Voice Chat ON"
+                aria-label="Turn voice chat off"
+                aria-pressed="true"
+                style="
+                    width:30px;
+                    height:30px;
+                    padding:3px;
+                    margin-left:5px;
+                    border:1px solid rgba(255,255,255,0.4);
+                    border-radius:50%;
+                    background:#168b45;
+                    color:white;
+                    font-size:17px;
+                    cursor:pointer;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                ">
+                🔊
+            </button>
+
+            <div id="declarationTimer"></div>
+
+        </div>
+
+    </section>
+
+        <div
+          id="myPlayerPanel"
+          class="my-player-panel">
+
+          <div class="my-player-details">
+
+              <div id="myInfo">
+                  You
+              </div>
+
+              <div id="myScore">
+                  Score : 0
+              </div>
+
+              <div id="dealScore">
+                  Deal Score : 0
+              </div>
+
+              <button
+                  id="btnDiscard"
+                  class="player-discard-button"
+                  type="button"
+                  onclick="discard()">
+                  Discard
+              </button>
+
+        
+            
+        
+
+          </div>
+
+          <div
+              id="dropStatus"
+              class="drop-status">
+          </div>
+
+      </div>
+
+        <section id="my-hand" class="hand" aria-label="My cards">
+          <div class="group-box" id="group0"></div>
+          <div class="group-box" id="group1"></div>
+          <div class="group-box" id="group2"></div>
+          <div class="group-box" id="group3"></div>
+          <div class="group-box" id="group4"></div>
+          <div class="group-box" id="group5"></div>
+        </section>
+      </main>
+
+      <aside id="chat-box" class="chat"></aside>
+    </div>
+  </div>
+
+  <!-- DECLARE PANEL -->
+  <section id="declarePanel" class="declare-panel hidden">
+    <div class="declare-content">
+      <h3>Arrange Your Cards</h3>
+      <div class="groups">
+        <div class="group" data-group="0"><h4>Group 1</h4></div>
+        <div class="group" data-group="1"><h4>Group 2</h4></div>
+        <div class="group" data-group="2"><h4>Group 3</h4></div>
+        <div class="group" data-group="3"><h4>Group 4</h4></div>
+        <div class="group" data-group="4"><h4>Group 5</h4></div>
+        <div class="group" data-group="5"><h4>Group 6</h4></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEAL RESULT -->
+  <section id="dealResultModal" class="result-modal">
+    <div class="result-box">
+      <div class="result-header">
+        <span class="result-heading-title">Deal Results</span>
+        <span class="next-deal-line">Next Deal in: <strong id="observationTimer">30</strong></span>
+        <div id="resultJokerCard"></div>
+        <span id="resultTimer" aria-hidden="true" style="display:none;">30</span>
+      </div>
+
+      <button
+        id="btnSettlement"
+        onclick="openSettlement()"
+        style="display:none;">Settlement</button>
+
+      <div id="dealResultsContainer"></div>
+    </div>
+  </section>
+
+
+  <div
+    id="settlementPopup"
+    style="
+        display:none;
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,0.65);
+        z-index:9999;
+        align-items:center;
+        justify-content:center;
+    "
+>
+    <div
+        
+        style="
+            width:340px;
+            max-width:90%;
+            background:#ffffff;
+            color:#000000;
+            border-radius:14px;
+            padding:20px;
+            box-shadow:0 8px 30px rgba(0,0,0,0.35);
+            text-align:center;
+        "
+    >
+
+        <div
+            style="
+                font-size:22px;
+                font-weight:bold;
+                color:#1565c0;
+                margin-bottom:15px;
+            "
+        >
+            Settlement
+        </div>
+
+        <div
+            style="
+                font-size:14px;
+                color:#555;
+                margin-bottom:15px;
+            "
+        >
+            Proposed Settlement
+        </div>
+
+        <div
+            id="settlementPlayers"
+            style="
+                background:#f5f7fa;
+                border-radius:10px;
+                padding:12px;
+                margin-bottom:18px;
+            "
+        ></div>
+
+        <div
+            id="settlementStatus"
+            style="
+                min-height:24px;
+                margin-bottom:12px;
+                font-weight:bold;
+                color:#1565c0;
+            "
+        ></div>
+
+        <div
+            style="
+                display:flex;
+                gap:12px;
+                justify-content:center;
+            "
+        >
+
+            <button
+                id="btnSettlementAccept"
+                onclick="respondSettlement('ACCEPT')"
+                style="
+                    background:#2e7d32;
+                    color:white;
+                    border:none;
+                    border-radius:8px;
+                    padding:10px 22px;
+                    font-weight:bold;
+                    cursor:pointer;
+                "
+            >
+                Accept
+            </button>
+
+            <button
+                id="btnSettlementCancel"
+                onclick="respondSettlement('CANCEL')"
+                style="
+                    background:#c62828;
+                    color:white;
+                    border:none;
+                    border-radius:8px;
+                    padding:10px 22px;
+                    font-weight:bold;
+                    cursor:pointer;
+                "
+            >
+                Cancel
+            </button>
+
+        </div>
+
+    </div>
+</div>
+  
+  <!-- TABLE COMPLETED -->
+  <section id="tableCompletedScreen">
+    <div class="winner-card">
+      <div class="trophy">🏆</div>
+      <h1>TABLE COMPLETED</h1>
+
+      <div class="table-scroll">
+        <table id="finalScoreTable">
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Score</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="finalScoreBody"></tbody>
+        </table>
+      </div>
+
+      <p>Thank you for playing</p>
+      
+    <!-- HOME BUTTON -->
+    <button
+      class="home-button"
+      onclick="goToHome()"
+    >
+      🏠 HOME
+    </button>
+
+    </div>
+  </section>
+
+    <div
+        id="settlementPopup"
+        class="settlement-popup"
+        style="display:none;"
+    >
+        <div class="settlement-box">
+
+            <h3>Settlement</h3>
+
+            <div id="settlementPlayers"></div>
+
+            <div class="settlement-actions">
+
+                <button
+                    id="btnSettlementAccept"
+                    onclick="respondSettlement('ACCEPT')"
+                >
+                    Accept
+                </button>
+
+                <button
+                    id="btnSettlementCancel"
+                    onclick="respondSettlement('CANCEL')"
+                >
+                    Cancel
+                </button>
+
+            </div>
+
+            <div id="settlementStatus"></div>
+
+        </div>
+    </div>
+
+
+  <div id="historyPopup" class="history-popup hidden">
+
+    <div class="history-popup-box">
+
+        <div class="history-popup-header">
+
+            <div class="history-popup-title">
+                Deal History
+            </div>
+
+            <button
+                id="btnViewLastDeal"
+                class="history-view-last-deal-btn"
+                type="button"
+            >
+                View Last Deal
+            </button>
+
+            <button
+                id="btnCloseHistory"
+                class="history-close-btn"
+                type="button"
+            >
+                ✕
+            </button>
+
+        </div>
+
+        <div class="history-table-wrapper">
+
+            <table id="historyTable">
+
+                <thead id="historyTableHead"></thead>
+
+                <tbody id="historyTableBody"></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div id="lastDealHistoryPopup" class="last-deal-history-popup hidden" aria-hidden="true">
+    <div class="last-deal-history-box" role="dialog" aria-modal="true" aria-labelledby="lastDealHistoryTitle">
+        <div class="last-deal-history-header">
+            <div>
+                <div id="lastDealHistoryTitle" class="last-deal-history-title">Last Completed Deal</div>
+                <div id="lastDealHistoryMeta" class="last-deal-history-meta"></div>
+            </div>
+            <button id="btnCloseLastDealHistory" class="history-close-btn" type="button" aria-label="Close last deal history">✕</button>
+        </div>
+        <div id="lastDealHistoryContent" class="last-deal-history-content">
+            <div class="last-deal-history-message">Select View Last Deal to load history.</div>
+        </div>
+    </div>
+</div>
+
+  <div id="rotateDeviceOverlay">
+    <div class="rotate-message">
+        <div class="rotate-icon">📱↻</div>
+        <div>Please rotate your phone</div>
+        <small>This game is designed for landscape mode</small>
+    </div>
+</div>
+
+<div
+    id="openPilePopup"
+    class="open-pile-popup"
+    onclick="closeOpenPileHistory()"
+>
+    <div
+        class="open-pile-popup-box"
+        onclick="event.stopPropagation()"
+    >
+        <div class="open-pile-popup-title">
+            Discarded Cards
+        </div>
+
+        <div
+            id="openPileHistoryCards"
+            class="open-pile-history-cards"
+        ></div>
+
+        <button
+            class="open-pile-close-btn"
+            onclick="closeOpenPileHistory()"
+        >
+            Close
+        </button>
+
+    </div>
+</div>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script>
+// =========================================================
+// CONNECTION STATUS UI
+// Uses the existing 7-second connection monitor when present.
+// Falls back to browser network state before the monitor starts.
+// =========================================================
+(function () {
+    function updateConnectionStatusUI() {
+        const el = document.getElementById("connectionStatus");
+        if (!el) return;
+
+        let offline = !navigator.onLine;
+
+        try {
+            if (typeof networkOffline !== "undefined") {
+                offline = Boolean(networkOffline);
+            }
+        } catch (e) {
+            // Keep browser network state as fallback.
+        }
+
+        el.classList.toggle("offline", offline);
+        el.classList.toggle("online", !offline);
+        el.title = offline
+            ? "Offline — checking connection"
+            : "Connected";
+    }
+
+    window.addEventListener("online", updateConnectionStatusUI);
+    window.addEventListener("offline", updateConnectionStatusUI);
+
+    updateConnectionStatusUI();
+    setInterval(updateConnectionStatusUI, 500);
+})();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+
+<script src="app.js"></script>
+  <script src="responsive.js"></script>
+</body>
+</html>

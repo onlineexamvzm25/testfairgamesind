@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Play With Friends</title>
+
+    <link rel="stylesheet" href="tablepage.css">
+</head>
+
+<body>
+<div id="rotateDeviceOverlay">
+  <div class="rotate-message">
+    <div class="rotate-icon">📱↻</div>
+    <div>Please rotate your phone</div>
+    <small>This game is designed for landscape mode</small>
+  </div>
+</div>
+
+
+<div class="page-container">
+
+    <h1 id="pageTitle">PLAY WITH FRIENDS</h1>
+
+
+    <!-- ==========================================
+         MAIN OPTIONS
+         ========================================== -->
+
+    <div id="mainOptions">
+
+
+        <button
+            type="button"
+            class="option-button"
+            id="createOptionButton"
+            onclick="showCreateTable()"
+        >
+            CREATE TABLE FOR FRIENDS
+        </button>
+
+
+        <button
+            type="button"
+            class="option-button"
+            id="joinOptionButton"
+            onclick="showJoinTable()"
+        >
+            JOIN FRIENDS TABLE
+        </button>
+
+        
+        <button
+        type="button"
+        class="home-button"
+        onclick="location.href='index.html'"
+    >
+        🏠 HOME
+       </button>
+
+    </div>
+
+
+    <!-- ==========================================
+         CREATE TABLE
+         ========================================== -->
+
+    <div
+        id="createSection"
+        class="card hidden"
+    >
+
+        <div class="section-heading">
+            <button
+                type="button"
+                class="section-back"
+                onclick="showMainOptions()"
+                aria-label="Back"
+            >←</button>
+            <h2 id="createHeading">CREATE TABLE FOR FRIENDS</h2>
+        </div>
+
+        <div class="compact-field">
+            <label for="hostName">Player Name</label>
+            <input
+                type="text"
+                id="hostName"
+                maxlength="15"
+                placeholder="Loading account..."
+                autocomplete="off"
+                readonly
+            >
+        </div>
+
+        <div class="compact-field">
+            <label for="hostPhone">Phone Number</label>
+            <input
+                type="tel"
+                id="hostPhone"
+                maxlength="10"
+                inputmode="numeric"
+                placeholder="Loading account..."
+                autocomplete="off"
+                readonly
+            >
+        </div>
+
+
+        <div id="friendsPoolOptions">
+
+        <label>
+            Select Pool (80 chips)
+        </label>
+
+        <div class="pool-options">
+
+            <label class="pool-option">
+                <input
+                    type="radio"
+                    name="poolType"
+                    value="201"
+                    checked
+                >
+                <span>201 POOL</span>
+            </label>
+
+            <label class="pool-option">
+                <input
+                    type="radio"
+                    name="poolType"
+                    value="101"
+                >
+                <span>101 POOL</span>
+            </label>
+
+        </div>
+
+    </div>
+
+
+        <div id="pointsMultiplierOptions" style="display:none;">
+
+        <label>
+            POINTS : 80 multiply
+        </label>
+
+        <div class="pool-options">
+
+            <label class="pool-option">
+                <input
+                    type="radio"
+                    name="pointsMultiplier"
+                    value="1"
+                    checked
+                >
+                <span>1 x 80</span>
+            </label>
+
+            <label class="pool-option">
+                <input
+                    type="radio"
+                    name="pointsMultiplier"
+                    value="5"
+                >
+                <span>5 x 400</span>
+            </label>
+
+            <label class="pool-option">
+                <input
+                    type="radio"
+                    name="pointsMultiplier"
+                    value="10"
+                >
+                <span>10 x 800</span>
+            </label>
+
+            <label class="pool-option">
+                <input
+                    type="radio"
+                    name="pointsMultiplier"
+                    value="50"
+                >
+                <span>50 x 4000</span>
+            </label>
+
+            <label class="pool-option">
+                <input
+                    type="radio"
+                    name="pointsMultiplier"
+                    value="100"
+                >
+                <span>100 x 8000</span>
+            </label>
+
+            <label class="pool-option">
+                <input
+                    type="radio"
+                    name="pointsMultiplier"
+                    value="200"
+                >
+                <span>200 x 16000</span>
+            </label>
+
+        </div>
+
+    </div>
+
+
+        <button
+            type="button"
+            class="main-button"
+            onclick="createTable()"
+        >
+            <span id="createButtonText">CREATE NEW TABLE</span>
+        </button>
+
+
+
+    </div>
+
+
+    <!-- ==========================================
+         JOIN TABLE
+         ========================================== -->
+
+    <div
+        id="joinSection"
+        class="card hidden"
+    >
+
+        <div class="section-heading">
+            <button
+                type="button"
+                class="section-back"
+                onclick="showMainOptions()"
+                aria-label="Back"
+            >←</button>
+            <h2 id="joinHeading">JOIN FRIENDS TABLE</h2>
+        </div>
+
+        <div class="compact-field">
+            <label for="joinTableId">Table ID</label>
+            <input
+                type="number"
+                id="joinTableId"
+                inputmode="numeric"
+                maxlength="6"
+                placeholder="Enter table ID"
+            >
+        </div>
+
+        <div class="compact-field">
+            <label for="joinPlayerName">Player Name</label>
+            <input
+                type="text"
+                id="joinPlayerName"
+                maxlength="15"
+                placeholder="Loading account..."
+                autocomplete="off"
+                readonly
+            >
+        </div>
+
+
+        <button
+            type="button"
+            class="main-button"
+            onclick="joinFriendTable()"
+        >
+            JOIN TABLE
+        </button>
+
+
+
+    </div>
+
+
+    <!-- ==========================================
+         MESSAGE
+         ========================================== -->
+
+    <div id="message"></div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="tablepage.js"></script>
+
+</body>
+</html>  
