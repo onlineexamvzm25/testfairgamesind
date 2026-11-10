@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <meta name="theme-color" content="#101827">
-  <title>JANA OR PATTU</title>
+  <title id="pageTitle">JANA OR PATTU</title>
   <link rel="stylesheet" href="jana.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -13,7 +13,7 @@
     <header class="topbar">
       <a class="brand" href="index.html" aria-label="Back to home">
         <span class="brand-mark">♠</span>
-        <span>JANA <b>OR</b> PATTU</span>
+        <span id="brandGameName">JANA <b>OR</b> PATTU</span>
       </a>
       <div class="user-chip"><span class="online-dot"></span><span id="userName">Loading account…</span></div>
     </header>
@@ -21,15 +21,15 @@
     <section id="homeView" class="view">
       <div class="hero">
         <div class="eyebrow">PRIVATE TABLES · PLAY WITH FRIENDS</div>
-        <h1>JANA <span>OR</span> PATTU</h1>
-        <p>Create a private table and invite your friends using its table code.</p>
+        <h1 id="heroGameName">JANA <span>OR</span> PATTU</h1>
+        <p id="heroDescription">Create a private table and invite your friends using its table code.</p>
       </div>
 
       <div class="action-grid">
         <article class="action-card">
           <div class="action-icon">＋</div>
           <h2>Create a table</h2>
-          <p>Choose the point value and create a private friends table.</p>
+          <p id="createDescription">Choose the point value and create a private friends table.</p>
           <div class="point-label">SELECT POINT VALUE</div>
           <div class="point-options" role="group" aria-label="Point value">
             <button class="point-option selected" data-points="10" type="button">10</button>
@@ -55,8 +55,8 @@
     <section id="tableView" class="view hidden">
       <div class="table-heading">
         <div>
-          <div class="eyebrow">YOUR PRIVATE FRIENDS TABLE</div>
-          <h1>Waiting Room</h1>
+          <div class="eyebrow" id="tableEyebrow">YOUR PRIVATE FRIENDS TABLE</div>
+          <h1 id="waitingRoomTitle">Waiting Room</h1>
         </div>
         <button id="refreshButton" class="icon-button" type="button" aria-label="Refresh table">↻</button>
       </div>

@@ -5,6 +5,20 @@
 const SUPABASE_URL = "https://dbfycihbcosuxxkrmbhl.supabase.co";
 const SUPABASE_KEY = "sb_publishable_aOyXtAbzrrX0Z9jPAU1qEA_0ZnK35BX";
 const SESSION_KEY = "crdgn_session_token";
+
+// The homepage selects the game through ?game_type=JANA or ?game_type=SETS.
+const requestedGameType = new URLSearchParams(location.search).get("game_type");
+const GAME_TYPE = String(requestedGameType || "JANA").trim().toUpperCase() === "SETS"
+  ? "SETS"
+  : "JANA";
+
+const GAME_NAMES = {
+  JANA: "JANA OR PATTU",
+  SETS: "SETS"
+};
+
+const GAME_NAME = GAME_NAMES[GAME_TYPE];
+
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let sessionToken = localStorage.getItem(SESSION_KEY);
@@ -51,7 +65,25 @@ async function callRpc(name, args) {
   return data;
 }
 
+function applyGameBranding() {
+  document.title = GAME_NAME;
+  $("brandGameName").innerHTML = GAME_TYPE === "JANA"
+    ? 'JANA <b>OR</b> PATTU'
+    : 'SETS';
+  $("heroGameName").innerHTML = GAME_TYPE === "JANA"
+    ? 'JANA <span>OR</span> PATTU'
+    : 'SETS';
+  $("heroDescription").textContent =
+    `Create a private ${GAME_NAME} table and invite your friends using its table code.`;
+  $("createDescription").textContent =
+    `Choose the point value and create a private ${GAME_NAME} friends table.`;
+  $("createButton").textContent = `CREATE ${GAME_TYPE} TABLE`;
+  $("tableEyebrow").textContent = `YOUR PRIVATE ${GAME_NAME} TABLE`;
+  $("waitingRoomTitle").textContent = `${GAME_NAME} · Waiting Room`;
+}
+
 async function initialize() {
+  applyGameBranding();
   if (!sessionToken) {
     location.replace("index.html");
     return;
@@ -113,7 +145,8 @@ async function createTable() {
   try {
     const data = await callRpc("jop_create_table", {
       p_session_token: sessionToken,
-      p_point_value: selectedPointValue
+      p_point_value: selectedPointValue,
+      p_game_type: GAME_TYPE
     });
     const result = firstRow(data);
     if (!result?.success) throw new Error(result?.message || "Could not create the table.");
@@ -138,7 +171,8 @@ async function joinTable(code) {
   try {
     const data = await callRpc("jop_join_table", {
       p_session_token: sessionToken,
-      p_table_code: normalized
+      p_table_code: normalized,
+      p_game_type: GAME_TYPE
     });
     const result = firstRow(data);
     if (!result?.success) throw new Error(result?.message || "Could not join the table.");
@@ -154,7 +188,11 @@ async function enterTable(code) {
   activeTableCode = String(code).trim().toUpperCase();
   $("homeView").classList.add("hidden");
   $("tableView").classList.remove("hidden");
-  history.replaceState({}, "", `${location.pathname}?table=${encodeURIComponent(activeTableCode)}`);
+  history.replaceState(
+    {},
+    "",
+    `${location.pathname}?game_type=${GAME_TYPE}&table=${encodeURIComponent(activeTableCode)}`
+  );
   showTableMessage("");
   await refreshTable();
   startBackgroundUpdates();
@@ -184,6 +222,12 @@ async function refreshTable(silent = false) {
     if (!first || first.success === false) {
       throw new Error(first?.message || "Unable to load this table.");
     }
+    const actualGameType = String(first.game_type || "").trim().toUpperCase();
+    if (actualGameType !== GAME_TYPE) {
+      throw new Error(
+        `This is a ${actualGameType || "different"} table. Please open the ${actualGameType || "correct"} lobby.`
+      );
+    }
     activeTableState = first;
     renderTable(rows, first);
     showTableMessage("");
@@ -194,6 +238,8 @@ async function refreshTable(silent = false) {
 }
 
 function renderTable(rows, state) {
+  $("tableEyebrow").textContent = `YOUR PRIVATE ${GAME_NAME} TABLE`;
+  $("waitingRoomTitle").textContent = `${GAME_NAME} · Waiting Room`;
   $("tableCode").textContent = state.out_table_code || activeTableCode;
   $("tablePoints").textContent = state.point_value ?? "—";
   $("playerCount").textContent = `${state.player_count ?? rows.length} / 6`;
@@ -299,7 +345,7 @@ async function leaveTable() {
     stopBackgroundUpdates();
     activeTableCode = null;
     activeTableState = null;
-    history.replaceState({}, "", location.pathname);
+    history.replaceState({}, "", `${location.pathname}?game_type=${GAME_TYPE}`);
     $("tableView").classList.add("hidden");
     $("homeView").classList.remove("hidden");
     $("joinCode").value = "";

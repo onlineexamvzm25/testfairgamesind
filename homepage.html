@@ -15,7 +15,7 @@
 
     <link rel="stylesheet" href="homepage.css">
     <style>
-      /* Keep the four main game options in a compact 2 x 2 grid. */
+      /* Keep the game options in a compact 2-column grid. */
       .games { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:12px !important; }
       .games > .game-button { width:100% !important; min-width:0; margin:0 !important; }
       @media(max-width:380px){ .games{gap:8px !important;} .games .game-label{font-size:12px;} .games .game-sub{font-size:10px;} }
@@ -216,6 +216,26 @@
 
         </button>
 
+
+
+        <button
+            class="game-button friends-button"
+            onclick="location.href='jana.html?game_type=JANA'"
+        >
+            <span class="game-icon">🃏</span>
+            <span class="game-label">JANA OR PATTU</span>
+            <span class="game-sub">Play With Friends</span>
+        </button>
+
+
+        <button
+            class="game-button friends-button"
+            onclick="location.href='jana.html?game_type=SETS'"
+        >
+            <span class="game-icon">🎴</span>
+            <span class="game-label">SETS</span>
+            <span class="game-sub">Play With Friends</span>
+        </button>
 
 
     </section>
