@@ -278,12 +278,23 @@ function renderTable(rows, state) {
   const me = players.find((p) => p.player_user_id === profile.user_id);
   const isEligible = !!me && !me.is_eliminated;
   const firstGame = Number(state.current_game_no) === 0;
+  const isJana = GAME_TYPE === "JANA";
   const canStartFirst = firstGame && !!me?.is_host;
   const canAttemptNext = Number(state.current_game_no) > 0 && isEligible;
   const startButton = $("startGameButton");
-  startButton.classList.toggle("hidden", !(canStartFirst || canAttemptNext));
-  startButton.textContent = firstGame ? "START FIRST GAME" : "START NEXT GAME";
-  startButton.disabled = !isEligible || (!canStartFirst && !canAttemptNext);
+
+  // JANA has one persistent game session per table. Once started,
+  // eligible members reopen the same game instead of starting another one.
+  const canOpenJana = isJana && !firstGame && isEligible;
+  const canShowStart = isJana
+    ? (canStartFirst || canOpenJana)
+    : (canStartFirst || canAttemptNext);
+
+  startButton.classList.toggle("hidden", !canShowStart);
+  startButton.textContent = isJana
+    ? (firstGame ? "START JANA GAME" : "OPEN JANA GAME")
+    : (firstGame ? "START FIRST GAME" : "START NEXT GAME");
+  startButton.disabled = !isEligible || !canShowStart;
   if (state.table_status === "CLOSED") {
     startButton.classList.add("hidden");
     showTableMessage("This table is closed.");
@@ -310,9 +321,45 @@ async function updatePresence() {
 
 async function startGame() {
   if (!activeTableCode || busy) return;
-  if (!confirm("Start a new game? The server will check every player's wallet balance before starting.")) return;
-  setBusy(true, "Checking player eligibility and starting game…");
+
+  const isJana = GAME_TYPE === "JANA";
+  const currentGameNo = Number(activeTableState?.current_game_no || 0);
+
+  // A JANA table has one active session. After its first start,
+  // the button simply opens that same session for reconnecting players.
+  if (isJana && currentGameNo > 0) {
+    location.href = `jana-game.html?table=${encodeURIComponent(activeTableCode)}`;
+    return;
+  }
+
+  const confirmMessage = isJana
+    ? "Start the JANA game? The server will check every player's wallet balance before starting."
+    : "Start a new game? The server will check every player's wallet balance before starting.";
+
+  if (!confirm(confirmMessage)) return;
+
+  setBusy(true, isJana
+    ? "Checking player eligibility and starting JANA…"
+    : "Checking player eligibility and starting game…");
+
   try {
+    if (isJana) {
+      const data = await callRpc("jop_jana_start_session", {
+        p_session_token: sessionToken,
+        p_table_code: activeTableCode
+      });
+      const result = firstRow(data);
+      if (!result?.success) {
+        throw new Error(result?.message || "Unable to start the JANA game.");
+      }
+
+      showToast(result.message || "JANA game started.");
+      stopBackgroundUpdates();
+      location.href = `jana-game.html?table=${encodeURIComponent(activeTableCode)}`;
+      return;
+    }
+
+    // Preserve the existing SETS start flow.
     const data = await callRpc("jop_start_new_game", {
       p_session_token: sessionToken,
       p_table_code: activeTableCode
@@ -322,8 +369,6 @@ async function startGame() {
     showToast(result.message || "Game started.");
     setBusy(false);
     await refreshTable();
-    // The actual Jana or Pattu gameplay screen is intentionally not launched yet.
-    // Its rules and turn flow must be defined before implementing gameplay.
   } catch (error) {
     showTableMessage(error.message);
   } finally {
