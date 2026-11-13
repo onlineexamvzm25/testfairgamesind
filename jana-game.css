@@ -177,3 +177,87 @@ body{min-height:100vh;padding:10px}button{font:inherit;cursor:pointer}.game-shel
         height: 48px !important;
     }
 }
+
+
+/* FINAL MOBILE FIX — observation cards + centered own seat */
+@media (max-width: 700px) {
+  /* Ten cards should remain in one row and be individually recognizable. */
+  .observation-table-wrap {
+    overflow-x: hidden;
+  }
+  .observation-table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+  }
+  .observation-table th:nth-child(1) { width: 23%; }
+  .observation-table th:nth-child(2) { width: 49%; }
+  .observation-table th:nth-child(3) { width: 13%; }
+  .observation-table th:nth-child(4) { width: 15%; }
+
+  .observation-cards {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: center;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    gap: 0;
+  }
+  .observation-card {
+    flex: 0 0 25px;
+    width: 25px;
+    height: 36px;
+    margin-right: -5px;
+  }
+  .observation-card:last-child { margin-right: 0; }
+
+  /* Center the player's complete seat. The seat is positioned by its center
+     because .player-seat has translate(-50%, -50%). */
+  .player-seat.me {
+    left: 50% !important;
+    top: 79% !important;
+    width: 52% !important;
+    max-width: 52% !important;
+    min-height: 108px !important;
+    padding: 6px 7px !important;
+  }
+  .player-seat.me .player-name { font-size: 10px !important; }
+  .player-seat.me .seat-state { font-size: 7px !important; }
+  .player-seat.me .seat-cards {
+    min-height: 54px !important;
+    padding-top: 4px !important;
+    justify-content: center !important;
+  }
+  .player-seat.me .seat-card {
+    width: 34px !important;
+    height: 48px !important;
+    margin-right: -4px !important;
+    padding: 3px !important;
+  }
+  .player-seat.me .seat-card .rank { font-size: 12px !important; }
+  .player-seat.me .seat-card .suit { font-size: 15px !important; }
+}
+
+@media (max-width: 380px) {
+  .observation-table th:nth-child(1) { width: 22%; }
+  .observation-table th:nth-child(2) { width: 50%; }
+  .observation-table th:nth-child(3) { width: 13%; }
+  .observation-table th:nth-child(4) { width: 15%; }
+  .observation-card {
+    flex-basis: 21px;
+    width: 21px;
+    height: 32px;
+    margin-right: -4px;
+  }
+  .player-seat.me {
+    width: 56% !important;
+    max-width: 56% !important;
+    top: 79% !important;
+  }
+  .player-seat.me .seat-card {
+    width: 30px !important;
+    height: 43px !important;
+  }
+}
