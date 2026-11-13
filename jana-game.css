@@ -57,7 +57,7 @@ body{min-height:100vh;padding:10px}button{font:inherit;cursor:pointer}.game-shel
 .observation-card:first-child{margin-left:0;}
 .observation-card:last-child{margin-right:0;}
 .observation-card:nth-child(2){z-index:2}.observation-card:nth-child(3){z-index:3}.observation-card:nth-child(4){z-index:4}.observation-card:nth-child(5){z-index:5}.observation-card:nth-child(6){z-index:6}.observation-card:nth-child(7){z-index:7}.observation-card:nth-child(8){z-index:8}.observation-card:nth-child(9){z-index:9}.observation-card:nth-child(10){z-index:10}.observation-card:nth-child(n+11){z-index:11;}
-@media(max-width:520px){.observation-cards{gap:0;overflow-x:auto;overflow-y:hidden;padding:3px 0 7px;scrollbar-width:thin}.observation-card{flex-basis:31px;width:31px;height:44px;margin-right:-12px}.observation-card .rank{font-size:10px}.observation-card .suit{font-size:12px}}
+@media(max-width:520px){.observation-cards{gap:0;overflow-x:auto;overflow-y:hidden;padding:3px 0 7px;scrollbar-width:thin}.observation-card{flex-basis:31px;width:31px;height:44px;margin-right:-5px}.observation-card .rank{font-size:10px}.observation-card .suit{font-size:12px}}
 /* Flying draw card uses viewport coordinates from getBoundingClientRect(). */
 .flying-card{position:fixed;z-index:40;left:0;top:0;pointer-events:none;will-change:transform,opacity;}
 
@@ -146,4 +146,34 @@ body{min-height:100vh;padding:10px}button{font:inherit;cursor:pointer}.game-shel
   .observation-name-cell { font-size: 8px; }
   .observation-score-cell, .observation-status-cell { font-size: 7px; }
   .player-seat.me { top: 68%; min-height: 116px; }
+}
+
+
+@media (max-width: 700px) {
+
+    .player-seat.me {
+        left: 25% !important;
+        width: 52% !important;
+        max-width: 52% !important;
+        top: 70% !important;
+        min-height: 105px !important;
+        padding: 7px !important;
+    }
+
+    .player-seat.me .player-name {
+        font-size: 10px !important;
+    }
+
+    .player-seat.me .player-status {
+        font-size: 8px !important;
+    }
+
+    .player-seat.me .player-score {
+        font-size: 15px !important;
+    }
+
+    .player-seat.me .card {
+        width: 34px !important;
+        height: 48px !important;
+    }
 }
