@@ -172,16 +172,15 @@ function renderObservation(state) {
       }).join("");
       const isWinner = player.user_id === round.winner_user_id || status === "WON";
       return `<article class="observation-player ${isWinner ? "is-winner" : ""}">
-        <span class="observation-player-name">${escapeHtml(player.name || "Player")}${player.user_id === myUserId ? " (YOU)" : ""}</span>
-        <span class="observation-player-score">${player.current_score == null ? "—" : escapeHtml(player.current_score)}</span>
-        <span class="observation-player-status ${status.toLowerCase()}">${escapeHtml(statusLabel(status))}</span>
+        <div class="observation-player-head"><span class="observation-player-name">${escapeHtml(player.name || "Player")}${player.user_id === myUserId ? " (YOU)" : ""}</span><b class="observation-player-status ${status.toLowerCase()}">${escapeHtml(statusLabel(status))}</b></div>
+        <div class="observation-player-score">SCORE · ${player.current_score == null ? "—" : escapeHtml(player.current_score)}</div>
         <div class="observation-cards">${cardHtml || '<span class="observation-no-cards">No cards</span>'}</div>
       </article>`;
     }).join("");
   $("observationOverlay").classList.remove("hidden");
-  $("exitTableButton").classList.remove("hidden");
+  const exitButton = $("exitTableButton");
+  if (exitButton) exitButton.classList.remove("hidden");
 }
-
 function updateTurnTransition(state) {
   const round = state.round || {};
   const currentId = round.current_turn_user_id || null;
@@ -215,7 +214,6 @@ function updateObservationCountdown() {
   const round = latestState?.round || {};
   const observing = isObservation(latestState);
   $("observationOverlay").classList.toggle("hidden", !observing);
-  $("exitTableButton").classList.toggle("hidden", !observing);
   if (!observing) return;
   const end = round.observation_ends_at ? new Date(round.observation_ends_at).getTime() : 0;
   const seconds = end ? Math.max(0, Math.ceil((end - serverNow()) / 1000)) : 0;
@@ -335,7 +333,19 @@ function renderState(state) {
   $("statusMessage").textContent = phase.message;
   renderPlayers(state);
   if (String(round.round_status).toUpperCase() === "OBSERVATION") renderObservation(state);
-  else $("observationOverlay").classList.add("hidden");
+  else {
+    $("observationOverlay").classList.add("hidden");
+    $("exitTableButton")?.classList.add("hidden");
+  }
+  // If another player closed the table by leaving during observation,
+  // all remaining players are returned to the homepage on their next poll.
+  if (String(state.session?.session_status || "").toUpperCase() !== "ACTIVE") {
+    toast("The JANA table has been closed.");
+    clearInterval(pollTimer);
+    clearInterval(clockTimer);
+    setTimeout(() => location.replace("index.html"), 900);
+    return;
+  }
   updateTurnTransition(state);
   renderMyHand(state);
   addMyScoreToSeat(state);
@@ -443,13 +453,12 @@ async function sendAction(action) {
   }
 }
 async function exitJanaTable() {
-  if (actionBusy || !isObservation(latestState)) return;
-  const confirmed = confirm("Exit this JANA table permanently?\n\nYour current round will be settled, and you will not participate in future rounds.");
-  if (!confirmed) return;
+  if (actionBusy || !latestState || !isObservation(latestState)) return;
+  if (!confirm("Exit this JANA table? Your current round will be settled, and you will not join future rounds.")) return;
+
   const button = $("exitTableButton");
   actionBusy = true;
-  button.disabled = true;
-  button.textContent = "EXITING…";
+  if (button) { button.disabled = true; button.textContent = "EXITING…"; }
   try {
     const data = await rpc("jop_jana_exit_table", {
       p_session_token: sessionToken,
@@ -457,27 +466,21 @@ async function exitJanaTable() {
     });
     const result = firstRow(data);
     if (!result?.success) throw new Error(result?.message || "Unable to exit the JANA table.");
+    toast(result.message || "You left the JANA table.");
     clearInterval(pollTimer);
     clearInterval(clockTimer);
-    toast(result.message || "You left the JANA table.");
-    setTimeout(() => {
-      location.href = result.table_closed
-        ? "jana.html?game_type=JANA"
-        : `jana.html?game_type=JANA&table=${encodeURIComponent(tableCode)}`;
-    }, 700);
+    setTimeout(() => location.replace("index.html"), 500);
   } catch (error) {
     toast(error.message || "Unable to exit the table.");
-    button.disabled = false;
-    button.textContent = "EXIT TABLE";
+    if (button) { button.disabled = false; button.textContent = "EXIT TABLE"; }
     actionBusy = false;
   }
 }
-
 function bindEvents() {
   $("refreshButton").addEventListener("click", pollCycle);
-  $("exitTableButton").addEventListener("click", exitJanaTable);
   $("hitButton").addEventListener("click", () => sendAction("HIT"));
   $("patluButton").addEventListener("click", () => sendAction("PATLU"));
+  $("exitTableButton")?.addEventListener("click", exitJanaTable);
   $("backToTableButton").addEventListener("click", () => {
     location.href = `jana.html?game_type=JANA&table=${encodeURIComponent(tableCode)}`;
   });
