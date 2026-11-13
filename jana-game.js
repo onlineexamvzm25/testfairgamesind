@@ -178,8 +178,6 @@ function renderObservation(state) {
       </article>`;
     }).join("");
   $("observationOverlay").classList.remove("hidden");
-  const exitButton = $("exitTableButton");
-  if (exitButton) exitButton.classList.remove("hidden");
 }
 function updateTurnTransition(state) {
   const round = state.round || {};
@@ -236,13 +234,29 @@ function addMyScoreToSeat(state) {
   }
   score.textContent = `SCORE ${me.current_score == null ? '—' : me.current_score}`;
 }
+let drawSoundUnlocked = false;
+function unlockDrawSound() {
+  const audio = $('drawSound');
+  if (!audio || drawSoundUnlocked) return;
+  // Browsers require a user gesture before game sounds can play. Unlock once
+  // with a muted play, then real draw events can play pickup.mp3 normally.
+  try {
+    audio.muted = true;
+    const promise = audio.play();
+    if (promise && promise.then) {
+      promise.then(() => { audio.pause(); audio.currentTime = 0; audio.muted = false; drawSoundUnlocked = true; })
+        .catch(() => { audio.muted = false; });
+    } else { audio.pause(); audio.currentTime = 0; audio.muted = false; drawSoundUnlocked = true; }
+  } catch (_) { audio.muted = false; }
+}
 function playDrawSound() {
   const audio = $('drawSound');
-  if (!audio) return;
-  try { audio.currentTime = 0; const promise = audio.play(); if (promise?.catch) promise.catch(() => {}); } catch (_) {}
+  if (!audio || !drawSoundUnlocked) return;
+  try { audio.pause(); audio.currentTime = 0; const promise = audio.play(); if (promise?.catch) promise.catch(() => {}); } catch (_) {}
 }
 function animateDraw(action) {
-  const target = document.querySelector(`.player-seat[data-player-id="${CSS.escape(action.user_id || '')}"]`);
+  const seat = document.querySelector(`.player-seat[data-player-id="${CSS.escape(action.user_id || '')}"]`);
+  const target = seat?.querySelector('.seat-cards') || seat;
   const deck = $('stockStack');
   if (!target || !deck) return;
   target.classList.remove('draw-flash');
@@ -333,19 +347,7 @@ function renderState(state) {
   $("statusMessage").textContent = phase.message;
   renderPlayers(state);
   if (String(round.round_status).toUpperCase() === "OBSERVATION") renderObservation(state);
-  else {
-    $("observationOverlay").classList.add("hidden");
-    $("exitTableButton")?.classList.add("hidden");
-  }
-  // If another player closed the table by leaving during observation,
-  // all remaining players are returned to the homepage on their next poll.
-  if (String(state.session?.session_status || "").toUpperCase() !== "ACTIVE") {
-    toast("The JANA table has been closed.");
-    clearInterval(pollTimer);
-    clearInterval(clockTimer);
-    setTimeout(() => location.replace("index.html"), 900);
-    return;
-  }
+  else $("observationOverlay").classList.add("hidden");
   updateTurnTransition(state);
   renderMyHand(state);
   addMyScoreToSeat(state);
@@ -452,35 +454,23 @@ async function sendAction(action) {
     if (latestState) updateControls(latestState);
   }
 }
-async function exitJanaTable() {
-  if (actionBusy || !latestState || !isObservation(latestState)) return;
-  if (!confirm("Exit this JANA table? Your current round will be settled, and you will not join future rounds.")) return;
-
-  const button = $("exitTableButton");
-  actionBusy = true;
-  if (button) { button.disabled = true; button.textContent = "EXITING…"; }
-  try {
-    const data = await rpc("jop_jana_exit_table", {
-      p_session_token: sessionToken,
-      p_table_code: tableCode
-    });
-    const result = firstRow(data);
-    if (!result?.success) throw new Error(result?.message || "Unable to exit the JANA table.");
-    toast(result.message || "You left the JANA table.");
-    clearInterval(pollTimer);
-    clearInterval(clockTimer);
-    setTimeout(() => location.replace("index.html"), 500);
-  } catch (error) {
-    toast(error.message || "Unable to exit the table.");
-    if (button) { button.disabled = false; button.textContent = "EXIT TABLE"; }
-    actionBusy = false;
-  }
-}
 function bindEvents() {
+  // Unlock pickup.mp3 on the first genuine user interaction (mobile browsers
+  // block audio started later by background polling until this happens).
+  const unlockOnce = () => {
+    unlockDrawSound();
+    if (drawSoundUnlocked) {
+      document.removeEventListener("pointerdown", unlockOnce);
+      document.removeEventListener("touchstart", unlockOnce);
+      document.removeEventListener("keydown", unlockOnce);
+    }
+  };
+  document.addEventListener("pointerdown", unlockOnce, { passive: true });
+  document.addEventListener("touchstart", unlockOnce, { passive: true });
+  document.addEventListener("keydown", unlockOnce);
   $("refreshButton").addEventListener("click", pollCycle);
   $("hitButton").addEventListener("click", () => sendAction("HIT"));
   $("patluButton").addEventListener("click", () => sendAction("PATLU"));
-  $("exitTableButton")?.addEventListener("click", exitJanaTable);
   $("backToTableButton").addEventListener("click", () => {
     location.href = `jana.html?game_type=JANA&table=${encodeURIComponent(tableCode)}`;
   });
