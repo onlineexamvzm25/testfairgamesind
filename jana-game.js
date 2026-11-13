@@ -134,7 +134,7 @@ function renderPlayers(state) {
     return `<article class="${classes}" data-player-id="${escapeHtml(p.user_id)}">
       <div class="seat-head"><span class="player-name">${escapeHtml(p.name || (isMe ? "You" : "Player"))}${isMe ? " (YOU)" : ""}</span><span class="seat-no">S${escapeHtml(p.seat_no ?? "—")}</span></div>
       <span class="seat-state ${status.toLowerCase()}">${escapeHtml(displayStatus)}</span>
-      <div class="seat-cards">${renderSeatCards(p, isMe)}</div>${score}
+      <div class="seat-cards">${renderSeatCards(p, isMe)}</div>
     </article>`;
   }).join("") || '<div class="seat-loading">Waiting for player details…</div>';
 }
