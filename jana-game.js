@@ -232,7 +232,8 @@ function renderState(state) {
   $("sessionNumber").textContent = safeText(state.session?.session_no);
   $("roundNumber").textContent = safeText(round.round_no);
   $("potAmount").textContent = safeText(round.pot_amount, "0");
-  $("stockCount").textContent = `STOCK · ${safeText(round.stock_count, "0")}`;
+  const stockCountLabel = $("stockCount");
+  if (stockCountLabel) stockCountLabel.textContent = `STOCK · ${safeText(round.stock_count, "0")}`;
   $("stockCountLarge").textContent = safeText(round.stock_count, "0");
   const centre = $("centreAnnouncement");
   if (String(round.round_status).toUpperCase() === "OBSERVATION" || String(round.round_status).toUpperCase() === "COMPLETED") {
