@@ -81,3 +81,69 @@ body{min-height:100vh;padding:10px}button{font:inherit;cursor:pointer}.game-shel
 .observation-card:nth-child(n){z-index:1;}
 .observation-card:nth-child(2){z-index:2}.observation-card:nth-child(3){z-index:3}.observation-card:nth-child(4){z-index:4}.observation-card:nth-child(5){z-index:5}.observation-card:nth-child(6){z-index:6}.observation-card:nth-child(7){z-index:7}.observation-card:nth-child(8){z-index:8}.observation-card:nth-child(9){z-index:9}.observation-card:nth-child(10){z-index:10}.observation-card:nth-child(n+11){z-index:11;}
 @media(max-width:520px){.observation-table{min-width:440px;}.observation-table th{padding:8px 6px;font-size:9px}.observation-table td{padding:6px}.observation-card{flex-basis:31px;width:31px;height:44px;margin-right:-12px}.observation-card .rank{font-size:10px}.observation-card .suit{font-size:12px}}
+
+
+/* MOBILE FIT REFINEMENT */
+@media (max-width: 700px) {
+  .table-felt { height: clamp(430px, 132vw, 530px); overflow: hidden; }
+  .player-seat { max-width: 30%; }
+  .player-seat.pos-1 { left: 2%; top: 25%; }
+  .player-seat.pos-2 { left: 20%; top: 8%; }
+  .player-seat.pos-3 { left: 52%; top: 8%; }
+  .player-seat.pos-4 { left: 68%; top: 25%; }
+  .player-seat.pos-5 { left: 35%; top: 20%; }
+  .player-seat.me { left: 21.5%; top: 69%; width: 57%; min-height: 118px; max-width: 57%; }
+
+  .observation-overlay { padding: 8px; align-items: center; }
+  .observation-panel {
+    width: 100%; max-width: 100%;
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto; overflow-x: hidden; padding: 11px;
+  }
+  .observation-table-wrap { width: 100%; overflow: hidden; }
+  .observation-table { width: 100%; min-width: 0; table-layout: fixed; }
+  .observation-table th, .observation-table td {
+    padding: 7px 4px; overflow: hidden;
+  }
+  .observation-table th:nth-child(1) { width: 24%; }
+  .observation-table th:nth-child(2) { width: 48%; }
+  .observation-table th:nth-child(3) { width: 13%; text-align: center; }
+  .observation-table th:nth-child(4) { width: 15%; text-align: right; }
+  .observation-name-cell {
+    min-width: 0; max-width: 0; font-size: 9px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .observation-cards-cell { width: auto; }
+  .observation-score-cell {
+    font-size: 10px; text-align: center;
+    padding-left: 1px !important; padding-right: 1px !important;
+  }
+  .observation-status-cell {
+    font-size: 8px; text-align: right;
+    padding-left: 1px !important; padding-right: 3px !important;
+  }
+  .observation-cards { max-width: 100%; overflow: hidden; padding: 3px 0 5px; }
+  .observation-card {
+    flex: 0 0 25px; width: 25px; height: 36px;
+    margin-right: -17px; padding: 3px; border-radius: 4px;
+  }
+  .observation-card .rank { font-size: 9px; }
+  .observation-card .suit { font-size: 11px; }
+  .observation-footer {
+    display: flex; flex-wrap: wrap; justify-content: center;
+    align-items: center; gap: 8px; line-height: 1.4;
+  }
+  .exit-table-button { flex: 0 0 auto; }
+}
+@media (max-width: 380px) {
+  .observation-panel { padding: 8px; }
+  .observation-table th, .observation-table td { padding-left: 3px; padding-right: 3px; }
+  .observation-table th:nth-child(1) { width: 23%; }
+  .observation-table th:nth-child(2) { width: 49%; }
+  .observation-table th:nth-child(3) { width: 13%; }
+  .observation-table th:nth-child(4) { width: 15%; }
+  .observation-card { flex-basis: 22px; width: 22px; height: 33px; margin-right: -15px; }
+  .observation-name-cell { font-size: 8px; }
+  .observation-score-cell, .observation-status-cell { font-size: 7px; }
+  .player-seat.me { top: 68%; min-height: 116px; }
+}
