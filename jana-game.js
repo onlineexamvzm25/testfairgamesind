@@ -171,11 +171,12 @@ function renderObservation(state) {
         return `<span class="observation-card ${p.red ? "red" : ""}"><span class="rank">${escapeHtml(p.rank)}</span><span class="suit">${p.suit}</span></span>`;
       }).join("");
       const isWinner = player.user_id === round.winner_user_id || status === "WON";
-      return `<article class="observation-player ${isWinner ? "is-winner" : ""}">
-        <div class="observation-player-head"><span class="observation-player-name">${escapeHtml(player.name || "Player")}${player.user_id === myUserId ? " (YOU)" : ""}</span><b class="observation-player-status ${status.toLowerCase()}">${escapeHtml(statusLabel(status))}</b></div>
-        <div class="observation-player-score">SCORE · ${player.current_score == null ? "—" : escapeHtml(player.current_score)}</div>
-        <div class="observation-cards">${cardHtml || '<span class="observation-no-cards">No cards</span>'}</div>
-      </article>`;
+      return `<tr class="observation-player-row ${isWinner ? "is-winner" : ""}">
+        <td class="observation-name-cell">${escapeHtml(player.name || "Player")}${player.user_id === myUserId ? " (YOU)" : ""}</td>
+        <td class="observation-cards-cell"><div class="observation-cards">${cardHtml || '<span class="observation-no-cards">No cards</span>'}</div></td>
+        <td class="observation-score-cell">${player.current_score == null ? "—" : escapeHtml(player.current_score)}</td>
+        <td class="observation-status-cell"><span class="observation-player-status ${status.toLowerCase()}">${escapeHtml(statusLabel(status))}</span></td>
+      </tr>`;
     }).join("");
   $("observationOverlay").classList.remove("hidden");
   const exitButton = $("exitTableButton");

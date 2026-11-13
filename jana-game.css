@@ -60,3 +60,24 @@ body{min-height:100vh;padding:10px}button{font:inherit;cursor:pointer}.game-shel
 @media(max-width:520px){.observation-cards{gap:0;overflow-x:auto;overflow-y:hidden;padding:3px 0 7px;scrollbar-width:thin}.observation-card{flex-basis:31px;width:31px;height:44px;margin-right:-12px}.observation-card .rank{font-size:10px}.observation-card .suit{font-size:12px}}
 /* Flying draw card uses viewport coordinates from getBoundingClientRect(). */
 .flying-card{position:fixed;z-index:40;left:0;top:0;pointer-events:none;will-change:transform,opacity;}
+
+
+/* Observation results shown as a clear four-column table. */
+.observation-players{display:block;min-width:0;}
+.observation-table-wrap{width:100%;overflow-x:auto;border:1px solid #55745b;border-radius:10px;background:#10291b;}
+.observation-table{width:100%;border-collapse:collapse;table-layout:auto;min-width:480px;}
+.observation-table thead{background:#0a1d12;}
+.observation-table th{padding:10px 8px;color:#f4d58e;font-size:10px;text-transform:uppercase;letter-spacing:.7px;text-align:left;border-bottom:1px solid #55745b;white-space:nowrap;}
+.observation-table td{padding:7px 8px;border-bottom:1px solid #ffffff18;vertical-align:middle;}
+.observation-table tbody tr:last-child td{border-bottom:0;}
+.observation-player-row.is-winner{background:#57451d55;box-shadow:inset 3px 0 #f4d17b;}
+.observation-name-cell{min-width:90px;color:#fff;font-size:11px;font-weight:900;white-space:nowrap;}
+.observation-cards-cell{width:100%;}
+.observation-score-cell{color:#f4d58e;font-size:13px;font-weight:950;text-align:center;white-space:nowrap;}
+.observation-status-cell{text-align:right;white-space:nowrap;}
+.observation-cards{display:flex;flex-wrap:nowrap;align-items:center;gap:0;margin:0;overflow:visible;min-width:0;padding:3px 0 5px;}
+.observation-card{position:relative;flex:0 0 35px;width:35px;height:49px;margin:0 -13px 0 0;z-index:1;}
+.observation-card:last-child{margin-right:0;}
+.observation-card:nth-child(n){z-index:1;}
+.observation-card:nth-child(2){z-index:2}.observation-card:nth-child(3){z-index:3}.observation-card:nth-child(4){z-index:4}.observation-card:nth-child(5){z-index:5}.observation-card:nth-child(6){z-index:6}.observation-card:nth-child(7){z-index:7}.observation-card:nth-child(8){z-index:8}.observation-card:nth-child(9){z-index:9}.observation-card:nth-child(10){z-index:10}.observation-card:nth-child(n+11){z-index:11;}
+@media(max-width:520px){.observation-table{min-width:440px;}.observation-table th{padding:8px 6px;font-size:9px}.observation-table td{padding:6px}.observation-card{flex-basis:31px;width:31px;height:44px;margin-right:-12px}.observation-card .rank{font-size:10px}.observation-card .suit{font-size:12px}}
