@@ -32,6 +32,10 @@
       <div id="playerStatusList" class="status-list"><div class="status-row"><span>Loading players…</span><b>—</b></div></div>
     </section>
 
+    <div id="turnTransitionOverlay" class="turn-transition-overlay hidden" aria-live="polite">
+      <div class="turn-transition-card"><span class="transition-kicker">NEXT TURN</span><strong id="transitionPlayerName">PLAYER</strong><div class="transition-countdown"><b id="transitionCountdown">3</b><span>GET READY</span></div><div class="transition-progress"><i></i></div></div>
+    </div>
+
     <section class="table-felt" id="tableFelt" aria-label="JANA round table">
       <div class="felt-rim"></div>
       <div class="table-centre">
@@ -52,6 +56,15 @@
     </section>
 
     <section class="history-panel"><div class="history-heading"><h2>Round activity</h2><span>LIVE</span></div><div id="activityList" class="activity-list"><div class="activity-empty">Round activity will appear here.</div></div></section>
+    <div id="observationOverlay" class="observation-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="observationTitle">
+      <section class="observation-panel">
+        <header class="observation-header"><div><span class="eyebrow">JANA · ROUND SUMMARY</span><h2 id="observationTitle">ROUND RESULTS</h2></div><div class="observation-countdown"><b id="observationCountdown">20</b><span>SECONDS</span></div></header>
+        <div id="observationWinner" class="observation-winner"></div>
+        <div id="observationPlayers" class="observation-players"></div>
+        <p class="observation-footer">Next round will start automatically when the countdown ends.</p>
+      </section>
+    </div>
+
     <audio id="drawSound" src="pickup.mp3" preload="auto"></audio>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <div id="busyOverlay" class="busy-overlay hidden"><div class="spinner"></div><span id="busyText">Loading game…</span></div>

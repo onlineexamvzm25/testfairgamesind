@@ -37,6 +37,10 @@ let pollBusy = false;
 let actionBusy = false;
 let toastTimer = null;
 let lastActionNo = null;
+let serverClockOffsetMs = 0;
+let lastTurnUserId = null;
+let transitionUntilMs = 0;
+let transitionUserId = null;
 
 function firstRow(data) { return Array.isArray(data) ? (data[0] || null) : data; }
 function setConnection(state, label) {
@@ -74,10 +78,21 @@ function escapeHtml(value) {
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
   }[c]));
 }
-function visibleCards(player, isMe) {
+function isObservation(state = latestState) {
+  return String(state?.round?.round_status || "").toUpperCase() === "OBSERVATION";
+}
+function visibleCards(player, isMe, revealAll = false) {
   const cards = Array.isArray(player.cards) ? player.cards : [];
-  if (isMe) return cards;
+  if (isMe || revealAll) return cards;
   return cards.filter(c => c.is_public === true);
+}
+function serverNow() { return Date.now() + serverClockOffsetMs; }
+function updateServerClock(state) {
+  const stamp = state?.server_time || state?.round?.server_time;
+  if (stamp) {
+    const parsed = new Date(stamp).getTime();
+    if (Number.isFinite(parsed)) serverClockOffsetMs = parsed - Date.now();
+  }
 }
 function renderCard(card) {
   const p = cardParts(card.card_code);
@@ -87,9 +102,9 @@ function renderCard(card) {
     <span class="suit">${p.suit}</span>
   </div>`;
 }
-function renderSeatCards(player, isMe) {
-  const cards = visibleCards(player, isMe);
-  const hiddenCount = isMe ? 0 : Math.max(0, Number(player.card_count || 0) - cards.length);
+function renderSeatCards(player, isMe, revealAll = false) {
+  const cards = visibleCards(player, isMe, revealAll);
+  const hiddenCount = (isMe || revealAll) ? 0 : Math.max(0, Number(player.card_count || 0) - cards.length);
   const backs = Array.from({ length: hiddenCount }, () => '<span class="seat-card back" aria-label="Hidden card"></span>').join("");
   const faces = cards.map(c => {
     const p = cardParts(c.card_code);
@@ -106,6 +121,7 @@ function relativeSeatPosition(player, mySeat) {
   return `pos-${offset}`;
 }
 function renderPlayers(state) {
+  const revealAll = isObservation(state);
   const players = Array.isArray(state.players) ? state.players : [];
   const me = state.me || {};
   const mySeat = Number(me.seat_no || 1);
@@ -134,10 +150,74 @@ function renderPlayers(state) {
     return `<article class="${classes}" data-player-id="${escapeHtml(p.user_id)}">
       <div class="seat-head"><span class="player-name">${escapeHtml(p.name || (isMe ? "You" : "Player"))}${isMe ? " (YOU)" : ""}</span><span class="seat-no">S${escapeHtml(p.seat_no ?? "—")}</span></div>
       <span class="seat-state ${status.toLowerCase()}">${escapeHtml(displayStatus)}</span>
-      <div class="seat-cards">${renderSeatCards(p, isMe)}</div>
+      <div class="seat-cards">${renderSeatCards(p, isMe, revealAll)}</div>
     </article>`;
   }).join("") || '<div class="seat-loading">Waiting for player details…</div>';
 }
+function renderObservation(state) {
+  const round = state.round || {};
+  const players = Array.isArray(state.players) ? state.players : [];
+  const winner = players.find(p => p.user_id === round.winner_user_id);
+  $("observationWinner").textContent = winner
+    ? `🏆 ${winner.name || "Player"} WINS${round.winner_reason ? ` · ${String(round.winner_reason).replaceAll("_", " ")}` : ""}`
+    : "ROUND COMPLETE · NO WINNER";
+  $("observationPlayers").innerHTML = players
+    .slice().sort((a,b) => Number(a.seat_no || 0) - Number(b.seat_no || 0))
+    .map(player => {
+      const status = String(player.player_status || "PLAYING").toUpperCase();
+      const cards = Array.isArray(player.cards) ? player.cards : [];
+      const cardHtml = cards.map(card => {
+        const p = cardParts(card.card_code);
+        return `<span class="observation-card ${p.red ? "red" : ""}"><span class="rank">${escapeHtml(p.rank)}</span><span class="suit">${p.suit}</span></span>`;
+      }).join("");
+      const isWinner = player.user_id === round.winner_user_id || status === "WON";
+      return `<article class="observation-player ${isWinner ? "is-winner" : ""}">
+        <div class="observation-player-head"><span class="observation-player-name">${escapeHtml(player.name || "Player")}${player.user_id === myUserId ? " (YOU)" : ""}</span><b class="observation-player-status ${status.toLowerCase()}">${escapeHtml(statusLabel(status))}</b></div>
+        <div class="observation-player-score">SCORE · ${player.current_score == null ? "—" : escapeHtml(player.current_score)}</div>
+        <div class="observation-cards">${cardHtml || '<span class="observation-no-cards">No cards</span>'}</div>
+      </article>`;
+    }).join("");
+  $("observationOverlay").classList.remove("hidden");
+}
+function updateTurnTransition(state) {
+  const round = state.round || {};
+  const currentId = round.current_turn_user_id || null;
+  const nextActionAt = round.next_action_at ? new Date(round.next_action_at).getTime() : 0;
+  const status = String(round.round_status || "").toUpperCase();
+  if (status !== "PLAYING") {
+    transitionUntilMs = 0;
+    transitionUserId = null;
+    $("turnTransitionOverlay").classList.add("hidden");
+    lastTurnUserId = currentId;
+    return;
+  }
+  if (lastTurnUserId !== null && currentId && currentId !== lastTurnUserId && nextActionAt > serverNow()) {
+    transitionUntilMs = nextActionAt;
+    transitionUserId = currentId;
+  }
+  lastTurnUserId = currentId;
+  const active = transitionUntilMs > serverNow() && transitionUserId === currentId;
+  $("turnTransitionOverlay").classList.toggle("hidden", !active);
+  if (active) {
+    const player = (state.players || []).find(p => p.user_id === currentId);
+    $("transitionPlayerName").textContent = player?.name || "NEXT PLAYER";
+    const seconds = Math.max(0, Math.ceil((transitionUntilMs - serverNow()) / 1000));
+    $("transitionCountdown").textContent = seconds;
+  } else if (transitionUntilMs && transitionUntilMs <= serverNow()) {
+    transitionUntilMs = 0;
+    transitionUserId = null;
+  }
+}
+function updateObservationCountdown() {
+  const round = latestState?.round || {};
+  const observing = isObservation(latestState);
+  $("observationOverlay").classList.toggle("hidden", !observing);
+  if (!observing) return;
+  const end = round.observation_ends_at ? new Date(round.observation_ends_at).getTime() : 0;
+  const seconds = end ? Math.max(0, Math.ceil((end - serverNow()) / 1000)) : 0;
+  $("observationCountdown").textContent = seconds;
+}
+
 function renderMyHand(state) {
   // The player's large cards and score are rendered inside their bottom seat.
   // This function intentionally does not create a second hand panel.
@@ -225,6 +305,7 @@ function phaseMessage(state) {
   return { phase: "WAITING", message: "Waiting for the current player…" };
 }
 function renderState(state) {
+  updateServerClock(state);
   latestState = state;
   const round = state.round || {};
   const me = state.me || {};
@@ -249,6 +330,9 @@ function renderState(state) {
   $("phaseLabel").textContent = phase.phase;
   $("statusMessage").textContent = phase.message;
   renderPlayers(state);
+  if (String(round.round_status).toUpperCase() === "OBSERVATION") renderObservation(state);
+  else $("observationOverlay").classList.add("hidden");
+  updateTurnTransition(state);
   renderMyHand(state);
   addMyScoreToSeat(state);
   processNewDrawActions(state);
@@ -263,6 +347,7 @@ function updateControls(state) {
   const canAct = String(round.round_status).toUpperCase() === "PLAYING" &&
     isMyTurn && String(me.player_status).toUpperCase() === "PLAYING" &&
     Number(me.current_score) >= 18 && Number(me.current_score) <= 20 &&
+    !(transitionUntilMs > serverNow() && transitionUserId === round.current_turn_user_id) &&
     !actionBusy;
   $("hitButton").disabled = !canAct;
   $("patluButton").disabled = !canAct;
@@ -278,12 +363,15 @@ function updateClock() {
   const me = latestState?.me || {};
   const isMyTurn = round.current_turn_user_id === myUserId;
   const deadline = round.turn_deadline_at ? new Date(round.turn_deadline_at).getTime() : 0;
-  const shouldShow = isMyTurn && deadline > 0 &&
+  const inTransition = transitionUntilMs > serverNow() && transitionUserId === round.current_turn_user_id;
+  const shouldShow = isMyTurn && !inTransition && deadline > 0 &&
     String(round.round_status).toUpperCase() === "PLAYING" &&
     Number(me.current_score) >= 18 && Number(me.current_score) <= 20;
   $("timerBox").classList.toggle("hidden", !shouldShow);
+  updateObservationCountdown();
+  if (latestState) updateTurnTransition(latestState);
   if (!shouldShow) return;
-  const seconds = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+  const seconds = Math.max(0, Math.ceil((deadline - serverNow()) / 1000));
   $("timerValue").textContent = seconds;
   const currentPlayer = (latestState?.players || []).find(p => p.user_id === round.current_turn_user_id);
   $("timerLabel").textContent = currentPlayer?.name ? `${currentPlayer.name} TURN` : "PLAYER TURN";
