@@ -36,14 +36,13 @@ let clockTimer = null;
 let pollBusy = false;
 let actionBusy = false;
 let toastTimer = null;
-let lastActionNo = 0;
+let lastActionNo = null;
 
 function firstRow(data) { return Array.isArray(data) ? (data[0] || null) : data; }
 function setConnection(state, label) {
   const el = $("connectionStatus");
   el.className = `connection ${state}`;
-  el.lastChild && (el.lastChild.textContent = label);
-  if (!el.lastChild || el.lastChild.nodeType !== Node.TEXT_NODE) el.textContent = label;
+  el.innerHTML = `<i></i> ${escapeHtml(label)}`;
 }
 function toast(message) {
   $("toast").textContent = message || "";
@@ -88,43 +87,113 @@ function renderCard(card) {
     <span class="suit">${p.suit}</span>
   </div>`;
 }
-function renderMiniCards(player, isMe) {
+function renderSeatCards(player, isMe) {
   const cards = visibleCards(player, isMe);
-  const html = cards.slice(0, 5).map(c => {
+  const hiddenCount = isMe ? 0 : Math.max(0, Number(player.card_count || 0) - cards.length);
+  const backs = Array.from({ length: hiddenCount }, () => '<span class="seat-card back" aria-label="Hidden card"></span>').join("");
+  const faces = cards.map(c => {
     const p = cardParts(c.card_code);
-    return `<span class="mini-card ${p.red ? "red" : ""}">${escapeHtml(p.rank)}${p.suit}</span>`;
+    return `<span class="seat-card ${p.red ? "red" : ""}" aria-label="${escapeHtml(p.rank)} ${p.suit}"><span class="rank">${escapeHtml(p.rank)}</span><span class="suit">${p.suit}</span></span>`;
   }).join("");
-  const hiddenCount = Math.max(0, Number(player.card_count || 0) - cards.length);
-  return html + (hiddenCount ? `<span class="mini-card back">?</span><span class="more-cards">+${hiddenCount}</span>` : "");
+  return backs + faces;
 }
 function statusLabel(status) {
-  return ({ PLAYING: "PLAYING", PATLU: "PATLU", BUSTED: "BUSTED", WON: "WINNER" })[status] || status || "—";
+  return ({ PLAYING: "PLAYING", PATLU: "PATLU", BUSTED: "BUSTED", WON: "WINNER" })[status] || status || "WAITING";
+}
+function relativeSeatPosition(player, mySeat) {
+  if (player.user_id === myUserId) return "me";
+  const offset = (Number(player.seat_no) - Number(mySeat) + 6) % 6;
+  return `pos-${offset}`;
 }
 function renderPlayers(state) {
   const players = Array.isArray(state.players) ? state.players : [];
-  $("playersGrid").innerHTML = players.map(p => {
+  const me = state.me || {};
+  const mySeat = Number(me.seat_no || 1);
+  const ordered = [...players].sort((a, b) => {
+    const da = (Number(a.seat_no) - mySeat + 6) % 6;
+    const db = (Number(b.seat_no) - mySeat + 6) % 6;
+    return da - db;
+  });
+
+  $("playerStatusList").innerHTML = ordered.map(p => {
+    const status = String(p.player_status || "PLAYING").toUpperCase();
+    const current = p.user_id === state.round?.current_turn_user_id;
+    const displayStatus = status === "PLAYING" ? (current ? "TURN" : "WAITING") : status;
+    const classes = ["status-row", current ? "current" : "", status.toLowerCase()].filter(Boolean).join(" ");
+    return `<div class="${classes}"><span>${escapeHtml(p.name || "Player")}${p.user_id === myUserId ? " (YOU)" : ""}</span><b>${escapeHtml(displayStatus)}</b></div>`;
+  }).join("") || '<div class="status-row"><span>Waiting for players</span><b>—</b></div>';
+
+  $("playersGrid").innerHTML = ordered.map(p => {
     const isMe = p.user_id === myUserId;
-    const current = p.is_current_turn === true || p.user_id === state.round?.current_turn_user_id;
-    const status = String(p.player_status || "").toUpperCase();
-    const classes = ["player-card", current ? "current" : "", isMe ? "me" : "",
-      status === "BUSTED" ? "busted" : "", status === "WON" ? "winner" : ""].filter(Boolean).join(" ");
-    const score = p.current_score == null ? "—" : p.current_score;
-    return `<article class="${classes}">
-      <div class="player-top"><span class="player-name">${escapeHtml(p.name || (isMe ? "You" : "Player"))}${isMe ? " (YOU)" : ""}</span><span class="seat-tag">SEAT ${escapeHtml(p.seat_no ?? "—")}</span></div>
-      <span class="player-status ${status.toLowerCase()}">${escapeHtml(statusLabel(status))}</span>
-      <div class="player-score"><strong>${escapeHtml(score)}</strong><span>POINTS</span></div>
-      <div class="mini-cards">${renderMiniCards(p, isMe)}</div>
+    const current = p.user_id === state.round?.current_turn_user_id;
+    const status = String(p.player_status || "PLAYING").toUpperCase();
+    const classes = ["player-seat", relativeSeatPosition(p, mySeat), current ? "current" : "",
+      isMe ? "me" : "", status === "PATLU" ? "patlu" : "", status === "BUSTED" ? "busted" : "",
+      status === "WON" ? "winner" : ""].filter(Boolean).join(" ");
+    const displayStatus = status === "PLAYING" ? (current ? "TURN" : "WAITING") : status;
+    return `<article class="${classes}" data-player-id="${escapeHtml(p.user_id)}">
+      <div class="seat-head"><span class="player-name">${escapeHtml(p.name || (isMe ? "You" : "Player"))}${isMe ? " (YOU)" : ""}</span><span class="seat-no">S${escapeHtml(p.seat_no ?? "—")}</span></div>
+      <span class="seat-state ${status.toLowerCase()}">${escapeHtml(displayStatus)}</span>
+      <div class="seat-cards">${renderSeatCards(p, isMe)}</div>${score}
     </article>`;
-  }).join("") || '<div class="loading-player">Waiting for player details…</div>';
+  }).join("") || '<div class="seat-loading">Waiting for player details…</div>';
 }
 function renderMyHand(state) {
+  // The player's large cards and score are rendered inside their bottom seat.
+  // This function intentionally does not create a second hand panel.
+}
+function addMyScoreToSeat(state) {
   const me = state.me || {};
-  const cards = Array.isArray(me.cards) ? me.cards : [];
-  $("myName").textContent = me.name || "Your hand";
-  $("myScore").textContent = me.current_score == null ? "—" : me.current_score;
-  $("myCards").innerHTML = cards.length ? cards.map(renderCard).join("") :
-    '<div class="card-placeholder">No cards to display</div>';
-  $("myPlayerStatus").textContent = statusLabel(me.player_status);
+  const seat = document.querySelector('.player-seat.me');
+  if (!seat) return;
+  let score = seat.querySelector('.seat-score-large');
+  if (!score) {
+    score = document.createElement('div');
+    score.className = 'seat-score-large';
+    seat.appendChild(score);
+  }
+  score.textContent = `SCORE ${me.current_score == null ? '—' : me.current_score}`;
+}
+function playDrawSound() {
+  const audio = $('drawSound');
+  if (!audio) return;
+  try { audio.currentTime = 0; const promise = audio.play(); if (promise?.catch) promise.catch(() => {}); } catch (_) {}
+}
+function animateDraw(action) {
+  const target = document.querySelector(`.player-seat[data-player-id="${CSS.escape(action.user_id || '')}"]`);
+  const deck = $('stockStack');
+  if (!target || !deck) return;
+  target.classList.remove('draw-flash');
+  void target.offsetWidth;
+  target.classList.add('draw-flash');
+  const from = deck.getBoundingClientRect();
+  const to = target.getBoundingClientRect();
+  const p = cardParts(action.card_code || '');
+  const card = document.createElement('div');
+  card.className = `flying-card ${p.red ? 'red' : ''}`;
+  card.innerHTML = `<span class="rank">${escapeHtml(p.rank || '★')}</span><span class="suit">${p.suit || '♠'}</span>`;
+  card.style.left = `${from.left + from.width/2 - 21}px`;
+  card.style.top = `${from.top + from.height/2 - 29}px`;
+  $('flyingCardLayer').appendChild(card);
+  requestAnimationFrame(() => {
+    const x = to.left + to.width/2 - (from.left + from.width/2);
+    const y = to.top + to.height/2 - (from.top + from.height/2);
+    card.style.transform = `translate(${x}px,${y}px) scale(.72) rotate(12deg)`;
+    card.style.opacity = '.15';
+  });
+  setTimeout(() => card.remove(), 700);
+  playDrawSound();
+}
+function processNewDrawActions(state) {
+  const actions = Array.isArray(state.actions) ? state.actions : [];
+  if (lastActionNo === null) {
+    lastActionNo = Math.max(0, ...actions.map(a => Number(a.action_no || 0)));
+    return;
+  }
+  const fresh = actions.filter(a => Number(a.action_no || 0) > lastActionNo)
+    .sort((a,b) => Number(a.action_no) - Number(b.action_no));
+  if (fresh.length) lastActionNo = Math.max(lastActionNo, ...fresh.map(a => Number(a.action_no || 0)));
+  fresh.filter(a => a.action_type === 'CARD_DRAWN').forEach(animateDraw);
 }
 function renderActivity(state) {
   const actions = Array.isArray(state.actions) ? state.actions.slice(-12).reverse() : [];
@@ -165,11 +234,23 @@ function renderState(state) {
   $("potAmount").textContent = safeText(round.pot_amount, "0");
   $("stockCount").textContent = `STOCK · ${safeText(round.stock_count, "0")}`;
   $("stockCountLarge").textContent = safeText(round.stock_count, "0");
+  const centre = $("centreAnnouncement");
+  if (String(round.round_status).toUpperCase() === "OBSERVATION" || String(round.round_status).toUpperCase() === "COMPLETED") {
+    const winner = (state.players || []).find(p => p.user_id === round.winner_user_id);
+    centre.textContent = winner ? `🏆 ${winner.name} WINS` : "ROUND COMPLETE · NO WINNER";
+    centre.classList.remove("hidden");
+    centre.classList.toggle("winner-announcement", !!winner);
+  } else {
+    centre.classList.add("hidden");
+    centre.classList.remove("winner-announcement");
+  }
   const phase = phaseMessage(state);
   $("phaseLabel").textContent = phase.phase;
   $("statusMessage").textContent = phase.message;
   renderPlayers(state);
   renderMyHand(state);
+  addMyScoreToSeat(state);
+  processNewDrawActions(state);
   renderActivity(state);
   updateControls(state);
   updateClock();
@@ -186,7 +267,10 @@ function updateControls(state) {
   $("patluButton").disabled = !canAct;
   if (canAct) $("turnHint").textContent = "It's your turn. Choose your next action.";
   else if (isMyTurn && Number(me.current_score) < 18) $("turnHint").textContent = "Your score is below 18. The server is drawing automatically.";
-  else $("turnHint").textContent = "Waiting for your turn…";
+  else {
+    const currentPlayer = (state.players || []).find(p => p.user_id === round.current_turn_user_id);
+    $("turnHint").textContent = currentPlayer ? `Current turn: ${currentPlayer.name}` : "Waiting for the next turn…";
+  }
 }
 function updateClock() {
   const round = latestState?.round || {};
@@ -200,7 +284,8 @@ function updateClock() {
   if (!shouldShow) return;
   const seconds = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
   $("timerValue").textContent = seconds;
-  $("timerLabel").textContent = "YOUR TURN";
+  const currentPlayer = (latestState?.players || []).find(p => p.user_id === round.current_turn_user_id);
+  $("timerLabel").textContent = currentPlayer?.name ? `${currentPlayer.name} TURN` : "PLAYER TURN";
   $("timerBox").classList.toggle("urgent", seconds <= 3);
 }
 async function refreshGameState() {

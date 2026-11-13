@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <meta name="theme-color" content="#0b1422">
+  <meta name="theme-color" content="#07150f">
   <title>JANA OR PATTU · Game</title>
   <link rel="stylesheet" href="jana-game.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -12,10 +12,7 @@
   <main class="game-shell">
     <header class="game-topbar">
       <a class="brand" href="jana.html"><span class="brand-mark">♠</span><span>JANA <b>OR</b> PATTU</span></a>
-      <div class="top-actions">
-        <span id="connectionStatus" class="connection"><i></i> Connecting</span>
-        <button id="refreshButton" class="small-icon-button" type="button" title="Refresh game">↻</button>
-      </div>
+      <div class="top-actions"><span id="connectionStatus" class="connection"><i></i> Connecting</span><button id="refreshButton" class="small-icon-button" type="button" title="Refresh game">↻</button></div>
     </header>
 
     <section class="round-strip">
@@ -25,58 +22,37 @@
       <div><span class="eyebrow">POT</span><strong id="potAmount">—</strong></div>
     </section>
 
-    <section id="roundBanner" class="round-banner">
-      <div class="banner-main">
-        <span id="phaseLabel" class="eyebrow">LOADING GAME</span>
-        <strong id="statusMessage">Connecting to the table…</strong>
-      </div>
-      <div id="timerBox" class="timer-box hidden">
-        <span id="timerLabel">YOUR TURN</span>
-        <strong id="timerValue">8</strong>
-      </div>
+    <section class="round-banner" id="roundBanner">
+      <div class="banner-main"><span id="phaseLabel" class="eyebrow">LOADING GAME</span><strong id="statusMessage">Connecting to the table…</strong></div>
+      <div id="timerBox" class="timer-box hidden"><span id="timerLabel">PLAYER TURN</span><strong id="timerValue">8</strong></div>
     </section>
 
-    <section class="table-area">
-      <div class="opponents-heading">
-        <span>PLAYERS</span>
-        <span id="stockCount">STOCK · 52</span>
-      </div>
-      <div id="playersGrid" class="players-grid">
-        <div class="loading-player">Loading players…</div>
-      </div>
+    <section class="status-panel" aria-label="Player status">
+      <div class="status-panel-heading"><span>TABLE PLAYERS</span><span>PLAYER <b>·</b> STATUS</span></div>
+      <div id="playerStatusList" class="status-list"><div class="status-row"><span>Loading players…</span><b>—</b></div></div>
+    </section>
 
-      <div class="stock-area">
-        <div class="deck-stack" aria-label="Stock cards">
-          <div class="deck-card deck-back"><span>♠</span><small>JANA</small></div>
-          <div class="deck-card deck-back deck-offset"></div>
+    <section class="table-felt" id="tableFelt" aria-label="JANA round table">
+      <div class="felt-rim"></div>
+      <div class="table-centre">
+        <div class="stock-stack" id="stockStack" aria-label="Stock deck">
+          <span class="stock-card stock-card-back"></span><span class="stock-card stock-card-back second"></span><span class="stock-card stock-card-back third"></span>
         </div>
-        <div class="stock-caption"><strong id="stockCountLarge">52</strong><span>CARDS IN STOCK</span></div>
+        <strong id="stockCountLarge" class="stock-number">52</strong><span class="stock-label">STOCK CARDS</span>
+        <div id="centreAnnouncement" class="centre-announcement hidden"></div>
       </div>
-
-      <section class="my-hand-panel">
-        <div class="hand-heading">
-          <div><span class="eyebrow">YOUR CARDS</span><h2 id="myName">Your hand</h2></div>
-          <div class="score-pill"><span>SCORE</span><strong id="myScore">—</strong></div>
-        </div>
-        <div id="myCards" class="my-cards"><div class="card-placeholder">Your cards will appear here</div></div>
-        <div id="myPlayerStatus" class="my-player-status">Waiting for game state…</div>
-      </section>
+      <div id="playersGrid" class="seat-layer"><div class="seat-loading">Loading seats…</div></div>
+      <div id="flyingCardLayer" class="flying-card-layer" aria-hidden="true"></div>
     </section>
 
     <section class="action-panel">
       <div id="turnHint" class="turn-hint">Waiting for your turn…</div>
-      <div class="action-buttons">
-        <button id="hitButton" class="hit-button" type="button" disabled>HIT <span>＋</span></button>
-        <button id="patluButton" class="patlu-button" type="button" disabled>PATLU <span>✓</span></button>
-      </div>
+      <div class="action-buttons"><button id="hitButton" class="hit-button" type="button" disabled>HIT <span>＋</span></button><button id="patluButton" class="patlu-button" type="button" disabled>PATLU <span>✓</span></button></div>
       <p class="action-note">HIT draws one card. PATLU ends your turn. A score of 21 wins immediately.</p>
     </section>
 
-    <section class="history-panel">
-      <div class="history-heading"><h2>Round activity</h2><span>LIVE</span></div>
-      <div id="activityList" class="activity-list"><div class="activity-empty">Round activity will appear here.</div></div>
-    </section>
-
+    <section class="history-panel"><div class="history-heading"><h2>Round activity</h2><span>LIVE</span></div><div id="activityList" class="activity-list"><div class="activity-empty">Round activity will appear here.</div></div></section>
+    <audio id="drawSound" src="pickup.mp3" preload="auto"></audio>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <div id="busyOverlay" class="busy-overlay hidden"><div class="spinner"></div><span id="busyText">Loading game…</span></div>
     <footer><button id="backToTableButton" type="button">BACK TO TABLE</button><span>Game actions are processed securely by the server.</span></footer>
