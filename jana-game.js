@@ -178,6 +178,8 @@ function renderObservation(state) {
       </article>`;
     }).join("");
   $("observationOverlay").classList.remove("hidden");
+  const exitButton = $("exitTableButton");
+  if (exitButton) exitButton.classList.remove("hidden");
 }
 function updateTurnTransition(state) {
   const round = state.round || {};
@@ -347,7 +349,19 @@ function renderState(state) {
   $("statusMessage").textContent = phase.message;
   renderPlayers(state);
   if (String(round.round_status).toUpperCase() === "OBSERVATION") renderObservation(state);
-  else $("observationOverlay").classList.add("hidden");
+  else {
+    $("observationOverlay").classList.add("hidden");
+    $("exitTableButton")?.classList.add("hidden");
+  }
+  // If another player closed the table by leaving during observation,
+  // return remaining players to the homepage on their next poll.
+  if (String(state.session?.session_status || "").toUpperCase() !== "ACTIVE") {
+    toast("The JANA table has been closed.");
+    clearInterval(pollTimer);
+    clearInterval(clockTimer);
+    setTimeout(() => location.replace("index.html"), 900);
+    return;
+  }
   updateTurnTransition(state);
   renderMyHand(state);
   addMyScoreToSeat(state);
@@ -454,6 +468,30 @@ async function sendAction(action) {
     if (latestState) updateControls(latestState);
   }
 }
+async function exitJanaTable() {
+  if (actionBusy || !latestState || !isObservation(latestState)) return;
+  if (!confirm("Exit this JANA table? Your current round will be settled, and you will not join future rounds.")) return;
+
+  const button = $("exitTableButton");
+  actionBusy = true;
+  if (button) { button.disabled = true; button.textContent = "EXITING…"; }
+  try {
+    const data = await rpc("jop_jana_exit_table", {
+      p_session_token: sessionToken,
+      p_table_code: tableCode
+    });
+    const result = firstRow(data);
+    if (!result?.success) throw new Error(result?.message || "Unable to exit the JANA table.");
+    toast(result.message || "You left the JANA table.");
+    clearInterval(pollTimer);
+    clearInterval(clockTimer);
+    setTimeout(() => location.replace("index.html"), 500);
+  } catch (error) {
+    toast(error.message || "Unable to exit the table.");
+    if (button) { button.disabled = false; button.textContent = "EXIT TABLE"; }
+    actionBusy = false;
+  }
+}
 function bindEvents() {
   // Unlock pickup.mp3 on the first genuine user interaction (mobile browsers
   // block audio started later by background polling until this happens).
@@ -471,6 +509,7 @@ function bindEvents() {
   $("refreshButton").addEventListener("click", pollCycle);
   $("hitButton").addEventListener("click", () => sendAction("HIT"));
   $("patluButton").addEventListener("click", () => sendAction("PATLU"));
+  $("exitTableButton")?.addEventListener("click", exitJanaTable);
   $("backToTableButton").addEventListener("click", () => {
     location.href = `jana.html?game_type=JANA&table=${encodeURIComponent(tableCode)}`;
   });
