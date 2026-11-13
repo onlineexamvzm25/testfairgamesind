@@ -49,3 +49,65 @@ body{min-height:100vh;padding:10px}button{font:inherit;cursor:pointer}.game-shel
 .observation-no-cards{font-size:9px;color:#a8b9ab;padding:8px 0}
 .observation-footer{margin:12px 0 0;text-align:center;color:#a9bcae;font-size:9px}
 @media(max-width:520px){.observation-overlay{padding:7px}.observation-panel{padding:12px;max-height:94vh}.observation-players{grid-template-columns:1fr}.observation-player{padding:8px}.observation-card{width:31px;height:44px}}
+
+
+/* FINAL LAYOUT REFINEMENT: compact table seats and one-row observation records */
+.observation-panel{width:min(940px,100%)}
+.observation-players{display:flex;flex-direction:column;gap:6px}
+.observation-player{display:grid;grid-template-columns:minmax(105px,1fr) 64px minmax(0,3fr);align-items:center;gap:9px;min-height:54px;padding:6px 9px}
+.observation-player-head{min-width:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:3px}
+.observation-player-name{max-width:100%;font-size:10px}
+.observation-player-status{font-size:7px}
+.observation-player-score{margin:0;text-align:center;font-size:10px;white-space:nowrap}
+.observation-cards{display:flex;flex-wrap:nowrap;align-items:center;justify-content:flex-start;min-width:0;overflow:visible;margin:0;padding:2px 0 2px 2px;white-space:nowrap}
+.observation-card{position:relative;flex:0 0 25px;width:25px;height:35px;margin-left:-12px;padding:2px;border-radius:4px}
+.observation-card:first-child{margin-left:0}
+.observation-card .rank{font-size:8px;line-height:1}
+.observation-card .suit{font-size:10px;line-height:1}
+.observation-card:nth-child(odd){z-index:2}
+.observation-card:nth-child(even){z-index:1}
+.observation-footer{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.exit-table-button{flex:none;border:1px solid #ff9a83;border-radius:9px;padding:9px 14px;background:linear-gradient(110deg,#a93832,#76231f);color:#fff;font-size:10px;font-weight:950;letter-spacing:1px;box-shadow:0 3px 12px #0005}
+.exit-table-button:disabled{opacity:.55;cursor:wait}
+/* Keep every seat inside the felt instead of clipping the side players. */
+.player-seat.pos-1{left:16%;top:28%}
+.player-seat.pos-2{left:32%;top:11%}
+.player-seat.pos-3{left:68%;top:11%}
+.player-seat.pos-4{left:84%;top:28%}
+.player-seat.pos-5{left:50%;top:23%}
+.player-seat.me{min-height:112px;top:81%;padding:7px 9px}
+.player-seat.me .seat-cards{min-height:58px;padding-top:5px}
+.player-seat.me .seat-card{width:40px;height:57px;margin-right:-7px;padding:4px}
+.player-seat.me .seat-card .rank{font-size:13px}
+.player-seat.me .seat-card .suit{font-size:17px}
+@media(max-width:700px){
+  .observation-panel{width:100%;padding:9px}
+  .observation-player{grid-template-columns:minmax(76px,.9fr) 48px minmax(0,2fr);gap:5px;min-height:45px;padding:5px 6px}
+  .observation-player-name{font-size:9px}
+  .observation-player-status{font-size:6px;letter-spacing:.3px}
+  .observation-player-score{font-size:8px}
+  .observation-card{flex-basis:21px;width:21px;height:30px;margin-left:-11px;padding:2px}
+  .observation-card .rank{font-size:7px}
+  .observation-card .suit{font-size:9px}
+  .observation-footer{font-size:8px}
+  .exit-table-button{padding:8px 10px;font-size:9px}
+  .player-seat{width:27%;min-height:72px}
+  .player-seat.pos-1{left:16%;top:27%}
+  .player-seat.pos-2{left:32%;top:10%}
+  .player-seat.pos-3{left:68%;top:10%}
+  .player-seat.pos-4{left:84%;top:27%}
+  .player-seat.pos-5{left:50%;top:21%}
+  .player-seat.me{width:52%;min-height:96px;top:81%;padding:5px 7px}
+  .player-seat.me .player-name{font-size:10px}
+  .player-seat.me .seat-state{font-size:7px;margin-top:2px}
+  .player-seat.me .seat-cards{min-height:48px;padding-top:3px}
+  .player-seat.me .seat-card{width:34px;height:48px;margin-right:-7px;padding:3px}
+  .player-seat.me .seat-card .rank{font-size:11px}
+  .player-seat.me .seat-card .suit{font-size:14px}
+}
+@media(max-width:380px){
+  .observation-player{grid-template-columns:minmax(68px,.8fr) 43px minmax(0,2fr);gap:4px}
+  .observation-card{flex-basis:19px;width:19px;height:28px;margin-left:-10px}
+  .player-seat.me{width:54%;min-height:90px;top:81%}
+  .player-seat.me .seat-card{width:31px;height:44px;margin-right:-7px}
+}
