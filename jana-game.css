@@ -263,16 +263,14 @@ body{min-height:100vh;padding:10px}button{font:inherit;cursor:pointer}.game-shel
 }
 
 
-/* SIX-SEAT MOBILE LAYOUT
-   Top: one seat opposite the user, then two seats.
-   Middle: stock pile.
-   Bottom: two opponent seats and the existing user's seat. */
+/* FINAL MOBILE SEAT ALIGNMENT — compact headers and fixed six-seat positions */
 @media (max-width: 700px) {
   .table-felt {
-    position: relative;
+    height: 530px;
+    overflow: hidden;
   }
 
-  /* Stock sits between the upper three and lower three seats. */
+  /* Stock remains centered between the upper and lower opponent rows. */
   .table-centre {
     left: 50% !important;
     top: 49% !important;
@@ -280,7 +278,7 @@ body{min-height:100vh;padding:10px}button{font:inherit;cursor:pointer}.game-shel
     z-index: 1;
   }
 
-  /* Compact opponent boxes; retain the existing card dimensions. */
+  /* Five opponent positions are reserved even when some seats are empty. */
   .player-seat:not(.me) {
     width: 30% !important;
     max-width: 30% !important;
@@ -290,24 +288,21 @@ body{min-height:100vh;padding:10px}button{font:inherit;cursor:pointer}.game-shel
     border-radius: 8px !important;
     overflow: visible;
   }
-
-  /* Name and status share one line; hide the seat number on mobile. */
   .player-seat:not(.me) .seat-head {
     display: flex !important;
     align-items: center !important;
-    justify-content: space-between !important;
+    justify-content: flex-start !important;
     width: 100%;
     min-width: 0;
   }
   .player-seat:not(.me) .player-name {
     min-width: 0;
     max-width: 100%;
+    padding-right: 0 !important;
     font-size: 9px !important;
     line-height: 1.15;
   }
-  .player-seat:not(.me) .seat-no {
-    display: none !important;
-  }
+  .player-seat:not(.me) .seat-no { display: none !important; }
   .player-seat:not(.me) .seat-state {
     position: absolute;
     top: 5px;
@@ -321,9 +316,7 @@ body{min-height:100vh;padding:10px}button{font:inherit;cursor:pointer}.game-shel
     line-height: 1.15;
     text-align: right;
   }
-  .player-seat:not(.me) .player-name {
-    padding-right: 35%;
-  }
+  .player-seat:not(.me) .player-name { padding-right: 38% !important; }
   .player-seat:not(.me) .seat-cards {
     min-height: 39px !important;
     height: 39px;
@@ -332,34 +325,82 @@ body{min-height:100vh;padding:10px}button{font:inherit;cursor:pointer}.game-shel
     overflow: visible;
   }
 
-  /* Opposite seat: exact top centre. */
-  .player-seat.pos-3 {
+  /* Fixed seat map relative to the user's seat:
+     pos-3 = top centre; pos-2/pos-4 = upper pair;
+     pos-1/pos-5 = lower pair. */
+  .player-seat.pos-3 { left: 50% !important; top: 10% !important; }
+  .player-seat.pos-2 { left: 25% !important; top: 28% !important; }
+  .player-seat.pos-4 { left: 75% !important; top: 28% !important; }
+  .player-seat.pos-1 { left: 25% !important; top: 58% !important; }
+  .player-seat.pos-5 { left: 75% !important; top: 58% !important; }
+
+  /* Own seat stays bottom-centre, but its header is compressed into one row:
+     NAME | SCORE | STATUS, with cards on the next row. */
+  .player-seat.me {
     left: 50% !important;
-    top: 12% !important;
+    top: 84% !important;
+    width: 56% !important;
+    max-width: 56% !important;
+    min-height: 102px !important;
+    height: auto !important;
+    padding: 6px 7px !important;
+    overflow: visible;
   }
-
-  /* Upper pair: left and right. */
-  .player-seat.pos-2 {
-    left: 25% !important;
-    top: 31% !important;
+  .player-seat.me .seat-head {
+    display: block !important;
+    width: 100%;
+    min-height: 14px;
   }
-  .player-seat.pos-4 {
-    left: 75% !important;
-    top: 31% !important;
+  .player-seat.me .player-name {
+    position: absolute;
+    left: 7px;
+    top: 7px;
+    max-width: 37%;
+    padding: 0 !important;
+    font-size: 9px !important;
+    line-height: 1.2;
   }
-
-  /* Lower pair: left and right, above the user's unchanged seat. */
-  .player-seat.pos-1 {
-    left: 25% !important;
-    top: 68% !important;
+  .player-seat.me .seat-no { display: none !important; }
+  .player-seat.me .seat-state {
+    position: absolute;
+    right: 7px;
+    top: 7px;
+    margin: 0 !important;
+    max-width: 28%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 7px !important;
+    line-height: 1.2;
+    text-align: right;
   }
-  .player-seat.pos-5 {
-    left: 75% !important;
-    top: 68% !important;
+  .player-seat.me .seat-score-large {
+    position: absolute;
+    left: 50%;
+    top: 7px;
+    transform: translateX(-50%);
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 10px !important;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+  .player-seat.me .seat-cards {
+    min-height: 69px !important;
+    height: 69px;
+    margin-top: 12px;
+    padding: 5px 0 0 !important;
+    justify-content: center !important;
+    align-items: center;
+  }
+  /* Preserve the existing own-card dimensions. */
+  .player-seat.me .seat-card {
+    width: 42px !important;
+    height: 60px !important;
+    margin-right: -5px !important;
   }
 }
 
-/* Slightly narrower opponent boxes on very small phones. */
 @media (max-width: 380px) {
   .player-seat:not(.me) {
     width: 31% !important;
@@ -367,12 +408,15 @@ body{min-height:100vh;padding:10px}button{font:inherit;cursor:pointer}.game-shel
     min-height: 62px !important;
     padding: 4px !important;
   }
-  .player-seat:not(.me) .player-name {
-    font-size: 8px !important;
+  .player-seat:not(.me) .player-name { font-size: 8px !important; }
+  .player-seat:not(.me) .seat-state { font-size: 6px !important; right: 4px; top: 5px; }
+  .player-seat.me {
+    width: 58% !important;
+    max-width: 58% !important;
+    min-height: 98px !important;
+    top: 84% !important;
   }
-  .player-seat:not(.me) .seat-state {
-    font-size: 6px !important;
-    right: 4px;
-    top: 5px;
-  }
+  .player-seat.me .player-name { font-size: 8px !important; }
+  .player-seat.me .seat-state { font-size: 6px !important; }
+  .player-seat.me .seat-score-large { font-size: 9px !important; }
 }
