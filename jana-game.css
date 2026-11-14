@@ -420,3 +420,28 @@ body{min-height:100vh;padding:10px}button{font:inherit;cursor:pointer}.game-shel
   .player-seat.me .seat-state { font-size: 6px !important; }
   .player-seat.me .seat-score-large { font-size: 9px !important; }
 }
+
+
+/* Stock-to-hand draw flight: viewport-positioned to match the Andar Bahar flow. */
+.flying-card {
+  position: fixed;
+  z-index: 99999;
+  width: 42px;
+  height: 59px;
+  border-radius: 6px;
+  border: 1px solid #f5e8cc;
+  background: linear-gradient(155deg,#fff,#e8edf0);
+  color: #172235;
+  box-shadow: 0 7px 16px #0009;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 4px;
+  font-weight: 950;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.flying-card.red { color: #c83f4e; }
+.flying-card .rank { font-size: 13px; }
+.flying-card .suit { font-size: 17px; align-self: flex-end; }
+.seat-cards.draw-flash { animation: drawFlash .7s ease-out; }
