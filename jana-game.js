@@ -42,6 +42,7 @@ let serverClockOffsetMs = 0;
 let lastTurnUserId = null;
 let transitionUntilMs = 0;
 let transitionUserId = null;
+let lastInitialDealRoundId = null;
 
 function firstRow(data) { return Array.isArray(data) ? (data[0] || null) : data; }
 function setConnection(state, label) {
@@ -199,6 +200,13 @@ function updateTurnTransition(state) {
   const currentId = round.current_turn_user_id || null;
   const nextActionAt = round.next_action_at ? new Date(round.next_action_at).getTime() : 0;
   const status = String(round.round_status || "").toUpperCase();
+  if (isRoundSetupAnimation(state)) {
+    transitionUntilMs = 0;
+    transitionUserId = null;
+    $("turnTransitionOverlay").classList.add("hidden");
+    lastTurnUserId = currentId;
+    return;
+  }
   if (status !== "PLAYING") {
     transitionUntilMs = 0;
     transitionUserId = null;
@@ -206,46 +214,120 @@ function updateTurnTransition(state) {
     lastTurnUserId = currentId;
     return;
   }
-  if (lastTurnUserId !== null && currentId && currentId !== lastTurnUserId && nextActionAt > serverNow()) {
+  const players = Array.isArray(state.players) ? state.players : [];
+  const currentPlayer = players.find(p => String(p.user_id) === String(currentId));
+  const bustedTransition = String(currentPlayer?.player_status || "").toUpperCase() === "BUSTED";
+  const changedTurn = lastTurnUserId !== null && currentId && currentId !== lastTurnUserId;
+  const turnStartedRecently = (state.actions || []).some(action =>
+    action.action_type === "TURN_STARTED" &&
+    String(action.user_name || "").trim().toLowerCase() === String(currentPlayer?.name || "").trim().toLowerCase() &&
+    action.created_at && (serverNow() - new Date(action.created_at).getTime()) >= 0 &&
+    (serverNow() - new Date(action.created_at).getTime()) <= 3500
+  );
+  const newTransition = nextActionAt > serverNow() &&
+    (bustedTransition || changedTurn || turnStartedRecently);
+  if (newTransition) {
     transitionUntilMs = nextActionAt;
     transitionUserId = currentId;
-  }
-  lastTurnUserId = currentId;
-  const active = transitionUntilMs > serverNow() && transitionUserId === currentId;
-  $("turnTransitionOverlay").classList.toggle("hidden", !active);
-  if (active) {
-    const player = (state.players || []).find(p => p.user_id === currentId);
-    $("transitionPlayerName").textContent = player?.name || "NEXT PLAYER";
-    const seconds = Math.max(0, Math.ceil((transitionUntilMs - serverNow()) / 1000));
-    $("transitionCountdown").textContent = seconds;
-  } else if (transitionUntilMs && transitionUntilMs <= serverNow()) {
+  } else if (nextActionAt <= serverNow() || transitionUserId !== currentId) {
     transitionUntilMs = 0;
     transitionUserId = null;
+  }
+  lastTurnUserId = currentId;
+  const active = transitionUntilMs > serverNow() && transitionUserId === currentId && nextActionAt > serverNow();
+  $("turnTransitionOverlay").classList.toggle("hidden", !active);
+  if (active) {
+    let displayPlayer = currentPlayer;
+    if (bustedTransition && currentPlayer) {
+      displayPlayer = players.filter(p => String(p.player_status || "").toUpperCase() === "PLAYING" && Number(p.turn_order) > Number(currentPlayer.turn_order))
+        .sort((a,b) => Number(a.turn_order) - Number(b.turn_order))[0] || null;
+    }
+    $("transitionPlayerName").textContent = displayPlayer?.name || (bustedTransition ? "ROUND ENDING" : "NEXT PLAYER");
+    const seconds = Math.max(0, Math.ceil((transitionUntilMs - serverNow()) / 1000));
+    $("transitionCountdown").textContent = seconds;
   }
 }
 function shuffleEndTime(round = latestState?.round || {}) {
   const started = round.started_at ? new Date(round.started_at).getTime() : 0;
   return started > 0 ? started + 6000 : 0;
 }
+function dealEndTime(round = latestState?.round || {}) {
+  const shuffleEnd = shuffleEndTime(round);
+  return shuffleEnd > 0 ? shuffleEnd + 2000 : 0;
+}
 function isShuffling(state = latestState) {
   if (!state?.round?.started_at) return false;
   const end = shuffleEndTime(state.round);
   return end > 0 && serverNow() < end;
 }
+function isDealing(state = latestState) {
+  if (!state?.round?.started_at) return false;
+  const start = shuffleEndTime(state.round);
+  const end = dealEndTime(state.round);
+  return start > 0 && serverNow() >= start && serverNow() < end;
+}
+function isRoundSetupAnimation(state = latestState) {
+  return isShuffling(state) || isDealing(state);
+}
+function flyInitialDealCard(player) {
+  const seat = document.querySelector(`.player-seat[data-player-id="${CSS.escape(String(player.user_id))}"]`);
+  const target = seat?.querySelector(".seat-cards");
+  const deck = $("stockStack");
+  if (!target || !deck) return;
+  const from = deck.getBoundingClientRect();
+  const to = target.getBoundingClientRect();
+  if (!from.width || !from.height || !to.width || !to.height) return;
+  const flyer = document.createElement("div");
+  flyer.className = "initial-deal-flyer";
+  const startX = from.left + from.width / 2 - 17;
+  const startY = from.top + from.height / 2 - 24;
+  const endX = to.left + to.width / 2 - 17;
+  const endY = to.top + to.height / 2 - 24;
+  Object.assign(flyer.style, {left:`${startX}px`,top:`${startY}px`,opacity:"1"});
+  document.body.appendChild(flyer);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    flyer.style.transform = `translate3d(${endX-startX}px,${endY-startY}px,0) scale(.86) rotate(7deg)`;
+    flyer.style.opacity = ".15";
+  }));
+  setTimeout(() => flyer.remove(), 620);
+}
+function startInitialDealAnimation(round) {
+  const roundId = String(round?.round_id || "");
+  if (!roundId || lastInitialDealRoundId === roundId) return;
+  lastInitialDealRoundId = roundId;
+  const start = shuffleEndTime(round);
+  const elapsed = Math.max(0, serverNow() - start);
+  const players = (latestState?.players || []).slice().sort((a,b) => Number(a.turn_order || a.seat_no || 0) - Number(b.turn_order || b.seat_no || 0));
+  const queue = [];
+  for (let cardNo = 0; cardNo < 2; cardNo++) {
+    for (const player of players) queue.push(player);
+  }
+  queue.forEach((player, index) => {
+    const delay = index * 85;
+    if (delay + 520 <= elapsed) return;
+    setTimeout(() => flyInitialDealCard(player), Math.max(0, delay - elapsed));
+  });
+}
 function updateShuffleOverlay() {
   const round = latestState?.round || {};
-  const end = shuffleEndTime(round);
-  const active = end > 0 && serverNow() < end;
-  const overlay = $("shuffleOverlay");
-  if (!overlay) return;
-  overlay.classList.toggle("hidden", !active);
-  if (active) {
-    $("shuffleCountdown").textContent = Math.max(1, Math.ceil((end - serverNow()) / 1000));
+  const shuffleEnd = shuffleEndTime(round);
+  const dealEnd = dealEndTime(round);
+  const now = serverNow();
+  const shuffling = shuffleEnd > 0 && now < shuffleEnd;
+  const dealing = shuffleEnd > 0 && now >= shuffleEnd && now < dealEnd;
+  const shuffleOverlay = $("shuffleOverlay");
+  if (shuffleOverlay) {
+    shuffleOverlay.classList.toggle("hidden", !shuffling);
+    if (shuffling) $("shuffleCountdown").textContent = Math.max(1, Math.ceil((shuffleEnd - now) / 1000));
   }
+  const dealOverlay = $("dealOverlay");
+  if (dealOverlay) dealOverlay.classList.toggle("hidden", !dealing);
+  document.body.classList.toggle("initial-dealing", dealing);
+  if (dealing) startInitialDealAnimation(round);
 }
 function updateObservationCountdown() {
   const round = latestState?.round || {};
-  const observing = isObservation(latestState);
+  const observing = isObservation(latestState) && !isRoundSetupAnimation(latestState);
   $("observationOverlay").classList.toggle("hidden", !observing);
   if (!observing) return;
   const end = round.observation_ends_at ? new Date(round.observation_ends_at).getTime() : 0;
@@ -449,6 +531,7 @@ function processNewDrawActions(state) {
   });
 }
 function renderActivity(state) {
+  if (!$("activityList")) return;
   const actions = Array.isArray(state.actions) ? state.actions.slice(-12).reverse() : [];
   if (!actions.length) {
     $("activityList").innerHTML = '<div class="activity-empty">No activity yet.</div>';
@@ -469,6 +552,7 @@ function phaseMessage(state) {
   const playerStatus = String(me.player_status || "").toUpperCase();
   const current = round.current_turn_user_id === myUserId;
   if (isShuffling(state)) return { phase: "SHUFFLING", message: "Shuffling the stock cards. Please wait…" };
+  if (isDealing(state)) return { phase: "DEALING CARDS", message: "Distributing two cards to every player…" };
   if (status === "OBSERVATION") return { phase: "ROUND COMPLETE", message: round.winner_user_id ? "Round finished · winner declared" : "Round finished · no winner" };
   if (status === "COMPLETED") return { phase: "SETTLED", message: "Round settled. Preparing the next round…" };
   if (status === "CANCELLED") return { phase: "CANCELLED", message: "This round was cancelled." };
@@ -504,7 +588,7 @@ function renderState(state) {
   $("phaseLabel").textContent = phase.phase;
   $("statusMessage").textContent = phase.message;
   renderPlayers(state);
-  if (String(round.round_status).toUpperCase() === "OBSERVATION") renderObservation(state);
+  if (String(round.round_status).toUpperCase() === "OBSERVATION" && !isRoundSetupAnimation(state)) renderObservation(state);
   else {
     $("observationOverlay").classList.add("hidden");
     $("exitTableButton")?.classList.add("hidden");
@@ -531,10 +615,13 @@ function updateControls(state) {
   const round = state.round || {};
   const me = state.me || {};
   const isMyTurn = round.current_turn_user_id === myUserId;
-  const canAct = !isShuffling(state) &&
+  const decisionDeadline = round.turn_deadline_at ? new Date(round.turn_deadline_at).getTime() : 0;
+  const nextActionAt = round.next_action_at ? new Date(round.next_action_at).getTime() : 0;
+  const canAct = !isRoundSetupAnimation(state) &&
     String(round.round_status).toUpperCase() === "PLAYING" &&
     isMyTurn && String(me.player_status).toUpperCase() === "PLAYING" &&
     Number(me.current_score) >= 18 && Number(me.current_score) <= 20 &&
+    decisionDeadline > serverNow() && !(nextActionAt > serverNow()) &&
     !(transitionUntilMs > serverNow() && transitionUserId === round.current_turn_user_id) &&
     !actionBusy;
   $("hitButton").disabled = !canAct;
@@ -552,7 +639,7 @@ function updateClock() {
   const isMyTurn = round.current_turn_user_id === myUserId;
   const deadline = round.turn_deadline_at ? new Date(round.turn_deadline_at).getTime() : 0;
   const inTransition = transitionUntilMs > serverNow() && transitionUserId === round.current_turn_user_id;
-  const shouldShow = isMyTurn && !inTransition && deadline > 0 &&
+  const shouldShow = !isRoundSetupAnimation(latestState) && isMyTurn && !inTransition && deadline > serverNow() &&
     String(round.round_status).toUpperCase() === "PLAYING" &&
     Number(me.current_score) >= 18 && Number(me.current_score) <= 20;
   $("timerBox").classList.toggle("hidden", !shouldShow);

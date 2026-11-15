@@ -22,16 +22,6 @@
       <div><span class="eyebrow">POT</span><strong id="potAmount">—</strong></div>
     </section>
 
-    <section class="round-banner" id="roundBanner">
-      <div class="banner-main"><span id="phaseLabel" class="eyebrow">LOADING GAME</span><strong id="statusMessage">Connecting to the table…</strong></div>
-      <div id="timerBox" class="timer-box hidden"><span id="timerLabel">PLAYER TURN</span><strong id="timerValue">8</strong></div>
-    </section>
-
-    <section class="status-panel" aria-label="Player status">
-      <div class="status-panel-heading"><span>TABLE PLAYERS</span><span>PLAYER <b>·</b> STATUS</span></div>
-      <div id="playerStatusList" class="status-list"><div class="status-row"><span>Loading players…</span><b>—</b></div></div>
-    </section>
-
     <div id="turnTransitionOverlay" class="turn-transition-overlay hidden" aria-live="polite">
       <div class="turn-transition-card"><span class="transition-kicker">NEXT TURN</span><strong id="transitionPlayerName">PLAYER</strong><div class="transition-countdown"><b id="transitionCountdown">3</b><span>GET READY</span></div><div class="transition-progress"><i></i></div></div>
     </div>
@@ -55,7 +45,16 @@
       <p class="action-note">HIT draws one card. PATLU ends your turn. A score of 21 wins immediately.</p>
     </section>
 
-    <section class="history-panel"><div class="history-heading"><h2>Round activity</h2><span>LIVE</span></div><div id="activityList" class="activity-list"><div class="activity-empty">Round activity will appear here.</div></div></section>
+    <section class="round-banner" id="roundBanner">
+      <div class="banner-main"><span id="phaseLabel" class="eyebrow">LOADING GAME</span><strong id="statusMessage">Connecting to the table…</strong></div>
+      <div id="timerBox" class="timer-box hidden"><span id="timerLabel">PLAYER TURN</span><strong id="timerValue">8</strong></div>
+    </section>
+
+    <section class="status-panel" aria-label="Player status">
+      <div class="status-panel-heading"><span>TABLE PLAYERS</span><span>PLAYER <b>·</b> STATUS</span></div>
+      <div id="playerStatusList" class="status-list"><div class="status-row"><span>Loading players…</span><b>—</b></div></div>
+    </section>
+
     <div id="shuffleOverlay" class="shuffle-overlay hidden" aria-live="polite">
       <div class="shuffle-panel">
         <span class="shuffle-kicker">JANA OR PATTU</span>
@@ -65,6 +64,14 @@
         <strong>SHUFFLING STOCK</strong>
         <span class="shuffle-subtitle">Preparing the next round</span>
         <b id="shuffleCountdown" class="shuffle-countdown">6</b>
+      </div>
+    </div>
+    <div id="dealOverlay" class="deal-overlay hidden" aria-live="polite">
+      <div class="deal-panel">
+        <span class="deal-kicker">SHUFFLE COMPLETE</span>
+        <strong>DISTRIBUTING CARDS</strong>
+        <span class="deal-subtitle">Dealing two cards to every player</span>
+        <div class="deal-mini-cards" aria-hidden="true"><i></i><i></i></div>
       </div>
     </div>
 
