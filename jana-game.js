@@ -37,6 +37,7 @@ let pollBusy = false;
 let actionBusy = false;
 let toastTimer = null;
 let lastActionNo = null;
+let lastDrawRoundId = null;
 let serverClockOffsetMs = 0;
 let lastTurnUserId = null;
 let transitionUntilMs = 0;
@@ -158,6 +159,17 @@ function renderObservation(state) {
   const round = state.round || {};
   const players = Array.isArray(state.players) ? state.players : [];
   const winner = players.find(p => p.user_id === round.winner_user_id);
+  const dealer = players.find(p => String(p.user_id) === String(round.dealer_user_id));
+  const meta = $("observationRoundMeta");
+  if (meta) {
+    meta.innerHTML = `
+      <div class="observation-meta-item">
+        <span>ROUND</span><strong>${escapeHtml(round.round_no ?? "—")}</strong>
+      </div>
+      <div class="observation-meta-item">
+        <span>DEALER</span><strong>${escapeHtml(dealer?.name || "—")}</strong>
+      </div>`;
+  }
   $("observationWinner").textContent = winner
     ? `🏆 ${winner.name || "Player"} WINS${round.winner_reason ? ` · ${String(round.winner_reason).replaceAll("_", " ")}` : ""}`
     : "ROUND COMPLETE · NO WINNER";
@@ -380,13 +392,33 @@ function animateDraw(action) {
 }
 function processNewDrawActions(state) {
   const actions = Array.isArray(state.actions) ? state.actions : [];
+  const roundId = String(state.round?.round_id ?? "");
+
+  // action_no restarts from the beginning for every new JANA round.
+  // Reset the browser cursor when the round changes, otherwise all later
+  // round draws can be incorrectly ignored.
+  if (roundId && roundId !== lastDrawRoundId) {
+    lastDrawRoundId = roundId;
+    const currentRoundMax = Math.max(0, ...actions.map(a => Number(a.action_no || 0)));
+    lastActionNo = Math.max(0, Math.min(...actions.map(a => Number(a.action_no || 0)).filter(n => n > 0)) - 1);
+    // If this is the first state snapshot and the action list is empty,
+    // initialize safely; future action numbers will be detected normally.
+    if (!actions.length) lastActionNo = 0;
+  }
+
   if (lastActionNo === null) {
     lastActionNo = Math.max(0, ...actions.map(a => Number(a.action_no || 0)));
     return;
   }
-  const fresh = actions.filter(a => Number(a.action_no || 0) > lastActionNo)
+
+  const fresh = actions
+    .filter(a => Number(a.action_no || 0) > lastActionNo)
     .sort((a,b) => Number(a.action_no) - Number(b.action_no));
-  if (fresh.length) lastActionNo = Math.max(lastActionNo, ...fresh.map(a => Number(a.action_no || 0)));
+
+  if (fresh.length) {
+    lastActionNo = Math.max(lastActionNo, ...fresh.map(a => Number(a.action_no || 0)));
+  }
+
   fresh.filter(a => a.action_type === "CARD_DRAWN").forEach(action => {
     drawAnimationQueue = drawAnimationQueue
       .then(() => new Promise(resolve => {

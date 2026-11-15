@@ -471,3 +471,43 @@ body{min-height:100vh;padding:10px}button{font:inherit;cursor:pointer}.game-shel
   35% { filter: brightness(1.8); }
   100% { filter: brightness(1); }
 }
+
+
+/* Observation round number and dealer details */
+.observation-round-meta {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+.observation-meta-item {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(220,190,110,.38);
+  border-radius: 9px;
+  background: rgba(5,25,17,.48);
+}
+.observation-meta-item span {
+  color: #b9c8bd;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .1em;
+}
+.observation-meta-item strong {
+  color: #f4d58b;
+  font-size: 13px;
+  font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 520px) {
+  .observation-round-meta { gap: 6px; margin-bottom: 8px; }
+  .observation-meta-item { padding: 6px 8px; }
+  .observation-meta-item span { font-size: 9px; }
+  .observation-meta-item strong { font-size: 11px; }
+}
