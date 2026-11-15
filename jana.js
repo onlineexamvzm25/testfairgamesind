@@ -29,6 +29,7 @@ let activeTableState = null;
 let refreshTimer = null;
 let presenceTimer = null;
 let busy = false;
+let redirectingToJana = false;
 
 const $ = (id) => document.getElementById(id);
 
@@ -200,7 +201,9 @@ async function enterTable(code) {
 
 function startBackgroundUpdates() {
   stopBackgroundUpdates();
-  refreshTimer = window.setInterval(() => refreshTable(true), 5000);
+  // JANA players watch the waiting room closely so everyone enters automatically
+  // as soon as the host creates the game session.
+  refreshTimer = window.setInterval(() => refreshTable(true), GAME_TYPE === "JANA" ? 1000 : 5000);
   presenceTimer = window.setInterval(() => updatePresence(), 15000);
 }
 function stopBackgroundUpdates() {
@@ -230,6 +233,20 @@ async function refreshTable(silent = false) {
     }
     activeTableState = first;
     renderTable(rows, first);
+
+    // When the host starts JANA, every eligible player still in the waiting
+    // room is redirected automatically. The one-second lobby poll means
+    // other players do not need to press OPEN/JOIN again.
+    if (GAME_TYPE === "JANA" && Number(first.current_game_no) > 0 && !redirectingToJana) {
+      const me = rows.find((r) => r.player_user_id === profile.user_id);
+      if (me && !me.is_eliminated) {
+        redirectingToJana = true;
+        stopBackgroundUpdates();
+        location.replace(`jana-game.html?table=${encodeURIComponent(activeTableCode)}`);
+        return;
+      }
+    }
+
     showTableMessage("");
   } catch (error) {
     if (!silent) showTableMessage(error.message);
