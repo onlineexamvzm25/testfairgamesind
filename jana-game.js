@@ -223,6 +223,26 @@ function updateTurnTransition(state) {
     transitionUserId = null;
   }
 }
+function shuffleEndTime(round = latestState?.round || {}) {
+  const started = round.started_at ? new Date(round.started_at).getTime() : 0;
+  return started > 0 ? started + 6000 : 0;
+}
+function isShuffling(state = latestState) {
+  if (!state?.round?.started_at) return false;
+  const end = shuffleEndTime(state.round);
+  return end > 0 && serverNow() < end;
+}
+function updateShuffleOverlay() {
+  const round = latestState?.round || {};
+  const end = shuffleEndTime(round);
+  const active = end > 0 && serverNow() < end;
+  const overlay = $("shuffleOverlay");
+  if (!overlay) return;
+  overlay.classList.toggle("hidden", !active);
+  if (active) {
+    $("shuffleCountdown").textContent = Math.max(1, Math.ceil((end - serverNow()) / 1000));
+  }
+}
 function updateObservationCountdown() {
   const round = latestState?.round || {};
   const observing = isObservation(latestState);
@@ -448,6 +468,7 @@ function phaseMessage(state) {
   const status = String(round.round_status || "").toUpperCase();
   const playerStatus = String(me.player_status || "").toUpperCase();
   const current = round.current_turn_user_id === myUserId;
+  if (isShuffling(state)) return { phase: "SHUFFLING", message: "Shuffling the stock cards. Please wait…" };
   if (status === "OBSERVATION") return { phase: "ROUND COMPLETE", message: round.winner_user_id ? "Round finished · winner declared" : "Round finished · no winner" };
   if (status === "COMPLETED") return { phase: "SETTLED", message: "Round settled. Preparing the next round…" };
   if (status === "CANCELLED") return { phase: "CANCELLED", message: "This round was cancelled." };
@@ -498,6 +519,7 @@ function renderState(state) {
     return;
   }
   updateTurnTransition(state);
+  updateShuffleOverlay();
   renderMyHand(state);
   addMyScoreToSeat(state);
   processNewDrawActions(state);
@@ -509,7 +531,8 @@ function updateControls(state) {
   const round = state.round || {};
   const me = state.me || {};
   const isMyTurn = round.current_turn_user_id === myUserId;
-  const canAct = String(round.round_status).toUpperCase() === "PLAYING" &&
+  const canAct = !isShuffling(state) &&
+    String(round.round_status).toUpperCase() === "PLAYING" &&
     isMyTurn && String(me.player_status).toUpperCase() === "PLAYING" &&
     Number(me.current_score) >= 18 && Number(me.current_score) <= 20 &&
     !(transitionUntilMs > serverNow() && transitionUserId === round.current_turn_user_id) &&
@@ -534,6 +557,7 @@ function updateClock() {
     Number(me.current_score) >= 18 && Number(me.current_score) <= 20;
   $("timerBox").classList.toggle("hidden", !shouldShow);
   updateObservationCountdown();
+  updateShuffleOverlay();
   if (latestState) updateTurnTransition(latestState);
   if (!shouldShow) return;
   const seconds = Math.max(0, Math.ceil((deadline - serverNow()) / 1000));

@@ -511,3 +511,17 @@ body{min-height:100vh;padding:10px}button{font:inherit;cursor:pointer}.game-shel
   .observation-meta-item span { font-size: 9px; }
   .observation-meta-item strong { font-size: 11px; }
 }
+
+
+/* Shared six-second stock shuffle shown from the server's round.started_at. */
+.shuffle-overlay{position:fixed;inset:0;z-index:28;display:grid;place-items:center;padding:18px;background:radial-gradient(ellipse at center,#153b27f5 0%,#06140df5 72%);backdrop-filter:blur(7px)}
+.shuffle-panel{width:min(330px,90vw);min-height:310px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;border:1px solid #c49b55;border-radius:22px;background:linear-gradient(145deg,#1c422b,#091c12);box-shadow:0 22px 70px #000c,0 0 35px #e8c16a44;text-align:center}
+.shuffle-kicker{color:#d8bd7b;font-size:9px;font-weight:950;letter-spacing:2.5px}
+.shuffle-deck{position:relative;width:116px;height:100px;margin:16px auto 18px;perspective:500px}
+.shuffle-deck i{position:absolute;left:32px;top:8px;width:54px;height:76px;border:2px solid #f1d99d;border-radius:8px;background:repeating-linear-gradient(45deg,#183d2c 0 5px,#d3ae64 5px 7px,#183d2c 7px 12px);box-shadow:0 7px 15px #0009;transform-origin:50% 85%;animation:stockShuffle 1.05s ease-in-out infinite}
+.shuffle-deck i:nth-child(2){animation-delay:-.13s}.shuffle-deck i:nth-child(3){animation-delay:-.26s}.shuffle-deck i:nth-child(4){animation-delay:-.39s}.shuffle-deck i:nth-child(5){animation-delay:-.52s}.shuffle-deck i:nth-child(6){animation-delay:-.65s}.shuffle-deck i:nth-child(7){animation-delay:-.78s}.shuffle-deck i:nth-child(8){animation-delay:-.91s}
+.shuffle-panel>strong{color:#ffdfa0;font-size:17px;font-weight:1000;letter-spacing:1.4px;text-shadow:0 0 18px #f2c66b55}
+.shuffle-subtitle{margin-top:7px;color:#b7cbb9;font-size:10px}
+.shuffle-countdown{display:grid;place-items:center;width:39px;height:39px;margin-top:16px;border:2px solid #e5c477;border-radius:50%;color:#ffe5a7;font-size:19px;box-shadow:0 0 18px #e5c47755}
+@keyframes stockShuffle{0%,100%{transform:translate(0,0) rotate(0deg)}20%{transform:translate(-23px,-5px) rotate(-17deg)}45%{transform:translate(19px,3px) rotate(15deg)}70%{transform:translate(-9px,-2px) rotate(-8deg)}}
+@media(prefers-reduced-motion:reduce){.shuffle-deck i{animation-duration:2.5s}}

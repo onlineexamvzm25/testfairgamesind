@@ -56,6 +56,18 @@
     </section>
 
     <section class="history-panel"><div class="history-heading"><h2>Round activity</h2><span>LIVE</span></div><div id="activityList" class="activity-list"><div class="activity-empty">Round activity will appear here.</div></div></section>
+    <div id="shuffleOverlay" class="shuffle-overlay hidden" aria-live="polite">
+      <div class="shuffle-panel">
+        <span class="shuffle-kicker">JANA OR PATTU</span>
+        <div class="shuffle-deck" aria-hidden="true">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+        <strong>SHUFFLING STOCK</strong>
+        <span class="shuffle-subtitle">Preparing the next round</span>
+        <b id="shuffleCountdown" class="shuffle-countdown">6</b>
+      </div>
+    </div>
+
     <div id="observationOverlay" class="observation-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="observationTitle">
       <section class="observation-panel">
         <header class="observation-header"><div><span class="eyebrow">JANA · ROUND SUMMARY</span><h2 id="observationTitle">ROUND RESULTS</h2></div><div class="observation-countdown"><b id="observationCountdown">20</b><span>SECONDS</span></div></header>
