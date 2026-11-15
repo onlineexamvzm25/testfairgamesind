@@ -445,3 +445,29 @@ body{min-height:100vh;padding:10px}button{font:inherit;cursor:pointer}.game-shel
 .flying-card .rank { font-size: 13px; }
 .flying-card .suit { font-size: 17px; align-self: flex-end; }
 .seat-cards.draw-flash { animation: drawFlash .7s ease-out; }
+
+
+/* Shared stock-to-player draw animation (all table viewers). */
+.flying-card {
+  position: fixed !important;
+  display: flex !important;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 4px;
+  border: 1px solid #f5e8cc;
+  border-radius: 7px;
+  background: linear-gradient(155deg,#fff,#e8edf0);
+  color: #172235;
+  box-shadow: 0 7px 18px #000b, 0 0 12px #ffd86a77;
+  pointer-events: none !important;
+  will-change: transform, opacity;
+}
+.flying-card.red { color: #c83f4e; }
+.flying-card .rank { font-size: 13px; font-weight: 950; line-height: 1; }
+.flying-card .suit { font-size: 18px; align-self: flex-end; line-height: 1; }
+.seat-cards.draw-flash { animation: janaDrawFlash .72s ease-out; }
+@keyframes janaDrawFlash {
+  0% { filter: brightness(1); }
+  35% { filter: brightness(1.8); }
+  100% { filter: brightness(1); }
+}

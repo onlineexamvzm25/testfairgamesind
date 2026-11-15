@@ -238,6 +238,7 @@ function addMyScoreToSeat(state) {
   score.textContent = `SCORE ${me.current_score == null ? '—' : me.current_score}`;
 }
 let drawSoundUnlocked = false;
+let drawAnimationQueue = Promise.resolve();
 function unlockDrawSound() {
   const audio = $("drawSound");
   if (!audio || drawSoundUnlocked) return;
@@ -279,34 +280,55 @@ function playDrawSound() {
     }
   } catch (_) {}
 }
+function findDrawPlayer(action) {
+  const players = Array.isArray(latestState?.players) ? latestState.players : [];
+  const id = action.user_id || action.actor_user_id || action.player_user_id ||
+    action.target_user_id || action.owner_user_id || "";
+  if (id) {
+    const byId = players.find(p => String(p.user_id) === String(id));
+    if (byId) return byId;
+  }
+
+  // JANA action rows expose the player's name for the activity feed. Resolve
+  // that name against the current server player list for every connected viewer.
+  const actionName = String(
+    action.user_name || action.player_name || action.actor_name ||
+    action.display_name || ""
+  ).trim().toLocaleLowerCase();
+  if (actionName) {
+    const byName = players.find(p =>
+      String(p.name || "").trim().toLocaleLowerCase() === actionName
+    );
+    if (byName) return byName;
+  }
+  return null;
+}
 function animateDraw(action) {
-  const playerId = action.user_id || action.actor_user_id || action.player_user_id || "";
-  const seat = playerId
-    ? document.querySelector(`.player-seat[data-player-id="${CSS.escape(String(playerId))}"]`)
+  const player = findDrawPlayer(action);
+  const seat = player
+    ? document.querySelector(`.player-seat[data-player-id="${CSS.escape(String(player.user_id))}"]`)
     : null;
   const target = seat?.querySelector(".seat-cards");
   const deck = $("stockStack");
-  if (!target || !deck) {
-    playDrawSound();
-    return;
-  }
+
+  // Every connected player plays the same draw sound when the shared server
+  // action arrives, regardless of who received the card.
+  playDrawSound();
+
+  if (!target || !deck) return;
 
   const from = deck.getBoundingClientRect();
   const to = target.getBoundingClientRect();
-  if (!from.width || !from.height || !to.width || !to.height) {
-    playDrawSound();
-    return;
-  }
+  if (!from.width || !from.height || !to.width || !to.height) return;
 
-  // The new card is already present in the latest server snapshot. Hide that
-  // final card briefly so the flying card appears to deliver it into the hand.
   const deliveredCard = target.lastElementChild;
   if (deliveredCard) deliveredCard.style.opacity = "0";
 
-  const cardDataParts = cardParts(action.card_code || "");
+  const p = cardParts(action.card_code || "");
   const flyer = document.createElement("div");
-  flyer.className = `flying-card ${cardDataParts.red ? "red" : ""}`;
-  flyer.innerHTML = `<span class="rank">${escapeHtml(cardDataParts.rank || "★")}</span><span class="suit">${cardDataParts.suit || "♠"}</span>`;
+  flyer.className = `flying-card ${p.red ? "red" : ""}`;
+  flyer.innerHTML = `<span class="rank">${escapeHtml(p.rank || "★")}</span><span class="suit">${p.suit || "♠"}</span>`;
+
   const width = 42;
   const height = 59;
   const startX = from.left + from.width / 2 - width / 2;
@@ -323,7 +345,7 @@ function animateDraw(action) {
     transform: "translate3d(0,0,0) rotate(-5deg)",
     opacity: "1",
     transition: "none",
-    zIndex: "99999",
+    zIndex: "2147483000",
     pointerEvents: "none"
   });
   document.body.appendChild(flyer);
@@ -331,7 +353,6 @@ function animateDraw(action) {
   target.classList.remove("draw-flash");
   void target.offsetWidth;
   target.classList.add("draw-flash");
-  playDrawSound();
 
   let finished = false;
   let fallbackTimer = null;
@@ -351,11 +372,11 @@ function animateDraw(action) {
 
   requestAnimationFrame(() => requestAnimationFrame(() => {
     if (finished || !flyer.isConnected) return;
-    flyer.style.transition = "transform 700ms cubic-bezier(.2,.75,.25,1), opacity 700ms ease";
-    flyer.style.transform = `translate3d(${endX - startX}px,${endY - startY}px,0) scale(.78) rotate(10deg)`;
+    flyer.style.transition = "transform 720ms cubic-bezier(.22,.61,.36,1), opacity 720ms ease";
+    flyer.style.transform = `translate3d(${endX - startX}px,${endY - startY}px,0) scale(.82) rotate(9deg)`;
     flyer.style.opacity = ".98";
   }));
-  fallbackTimer = setTimeout(finish, 1100);
+  fallbackTimer = setTimeout(finish, 1200);
 }
 function processNewDrawActions(state) {
   const actions = Array.isArray(state.actions) ? state.actions : [];
@@ -366,7 +387,14 @@ function processNewDrawActions(state) {
   const fresh = actions.filter(a => Number(a.action_no || 0) > lastActionNo)
     .sort((a,b) => Number(a.action_no) - Number(b.action_no));
   if (fresh.length) lastActionNo = Math.max(lastActionNo, ...fresh.map(a => Number(a.action_no || 0)));
-  fresh.filter(a => a.action_type === "CARD_DRAWN").forEach(animateDraw);
+  fresh.filter(a => a.action_type === "CARD_DRAWN").forEach(action => {
+    drawAnimationQueue = drawAnimationQueue
+      .then(() => new Promise(resolve => {
+        animateDraw(action);
+        setTimeout(resolve, 760);
+      }))
+      .catch(error => console.warn("Draw animation:", error));
+  });
 }
 function renderActivity(state) {
   const actions = Array.isArray(state.actions) ? state.actions.slice(-12).reverse() : [];
